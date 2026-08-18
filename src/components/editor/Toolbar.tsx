@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
 import { downloadSvgAsPng } from "@/lib/export/svgToPng";
 import { RoundArrayDialog } from "@/components/editor/RoundArrayDialog";
+import { StraightArrayDialog } from "@/components/editor/StraightArrayDialog";
 import { ExportSvg } from "@/components/editor/ExportSvg";
 import type { GuideType } from "@/types/chart";
 
@@ -14,6 +15,7 @@ export function Toolbar() {
 
   const [showGuidePopover, setShowGuidePopover] = useState(false);
   const [showRoundDialog, setShowRoundDialog] = useState(false);
+  const [showStraightDialog, setShowStraightDialog] = useState(false);
   const exportRef = useRef<SVGSVGElement>(null);
 
   return (
@@ -97,6 +99,13 @@ export function Toolbar() {
 
         <button
           className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
+          onClick={() => setShowStraightDialog(true)}
+        >
+          直線の均等配置…
+        </button>
+
+        <button
+          className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
           onClick={() => setShowRoundDialog(true)}
         >
           輪の等分配置…
@@ -122,6 +131,7 @@ export function Toolbar() {
       </div>
 
       {showRoundDialog && <RoundArrayDialog onClose={() => setShowRoundDialog(false)} />}
+      {showStraightDialog && <StraightArrayDialog onClose={() => setShowStraightDialog(false)} />}
       <ExportSvg ref={exportRef} />
     </div>
   );

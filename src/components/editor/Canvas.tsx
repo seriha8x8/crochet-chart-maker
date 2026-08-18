@@ -29,6 +29,7 @@ export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
+  const [containerOffset, setContainerOffset] = useState({ left: 0, top: 0 });
   const [viewport, setViewport] = useState<Viewport>({ zoom: 1, panX: 0, panY: 0 });
   const [drag, setDrag] = useState<DragMode>({ kind: "none" });
   const [snapGuide, setSnapGuide] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
@@ -71,13 +72,23 @@ export function Canvas() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    const updateOffset = () => {
+      const rect = el.getBoundingClientRect();
+      setContainerOffset({ left: rect.left, top: rect.top });
+    };
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setSize({ w: entry.contentRect.width, h: entry.contentRect.height });
       }
+      updateOffset();
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    updateOffset();
+    window.addEventListener("scroll", updateOffset, true);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", updateOffset, true);
+    };
   }, []);
 
   const screenToWorld = useCallback(
@@ -314,11 +325,14 @@ export function Canvas() {
   const selectedSymbol =
     selectedIds.length === 1 ? symbolById.get(selectedIds[0]) : undefined;
 
+  // startScreen/currentScreen are viewport-relative (clientX/Y); the overlay div is
+  // absolutely positioned inside the canvas container, so offset by the container's
+  // own position or the box is drawn away from the cursor.
   const marqueeRect =
     drag.kind === "marquee"
       ? {
-          x: Math.min(drag.startScreen.x, drag.currentScreen.x),
-          y: Math.min(drag.startScreen.y, drag.currentScreen.y),
+          x: Math.min(drag.startScreen.x, drag.currentScreen.x) - containerOffset.left,
+          y: Math.min(drag.startScreen.y, drag.currentScreen.y) - containerOffset.top,
           w: Math.abs(drag.currentScreen.x - drag.startScreen.x),
           h: Math.abs(drag.currentScreen.y - drag.startScreen.y),
         }
