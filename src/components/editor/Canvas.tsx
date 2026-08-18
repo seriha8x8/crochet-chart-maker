@@ -8,7 +8,7 @@ import { getFootPoint, getHeadPoint } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
 import type { ChartSymbol } from "@/types/chart";
 
-const SNAP_THRESHOLD = 6;
+const SNAP_THRESHOLD = 9;
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 3;
 
@@ -33,6 +33,12 @@ export function Canvas() {
   const [drag, setDrag] = useState<DragMode>({ kind: "none" });
   const [snapGuide, setSnapGuide] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [clickCandidate, setClickCandidate] = useState<string | null>(null);
+  const [placementPreview, setPlacementPreview] = useState<{
+    x: number;
+    y: number;
+    guideX: number | null;
+    guideY: number | null;
+  } | null>(null);
 
   const symbols = useChartStore((s) => s.symbols);
   const layers = useChartStore((s) => s.layers);
@@ -60,6 +66,7 @@ export function Canvas() {
     [symbols, visibleLayerIds],
   );
   const symbolById = useMemo(() => new Map(symbols.map((s) => [s.id, s])), [symbols]);
+  const activePlacementPreview = placementTool ? placementPreview : null;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -128,13 +135,14 @@ export function Canvas() {
   const onSymbolPointerDown = useCallback(
     (e: React.PointerEvent, symbol: ChartSymbol) => {
       e.stopPropagation();
-      if (placementTool) return;
 
       if (parentLinkTargetId) {
         if (symbol.id !== parentLinkTargetId) toggleParent(symbol.id);
         return;
       }
 
+      // Clicking an existing symbol always selects it, even while a placement
+      // tool is still armed, so a symbol can be picked up right after placing it.
       const world = screenToWorld(e.clientX, e.clientY);
       let nextSelection = selectedIds;
       if (e.shiftKey) {
@@ -155,7 +163,7 @@ export function Canvas() {
       }
       setDrag({ kind: "moveSelection", startWorld: world, startPositions, moved: false });
     },
-    [placementTool, parentLinkTargetId, selectedIds, selectOnly, toggleSelect, symbolById, toggleParent, screenToWorld],
+    [parentLinkTargetId, selectedIds, selectOnly, toggleSelect, symbolById, toggleParent, screenToWorld],
   );
 
   const onRotateHandlePointerDown = useCallback(
@@ -187,7 +195,9 @@ export function Canvas() {
         return;
       }
       if (placementTool) {
-        placeSymbolAt(world.x, world.y);
+        const snap = computeSnap(world, snapCandidatePoints(new Set()), SNAP_THRESHOLD / viewport.zoom);
+        placeSymbolAt(snap.x, snap.y);
+        setPlacementPreview(null);
         return;
       }
       setDrag({
@@ -198,8 +208,25 @@ export function Canvas() {
       });
       if (!e.shiftKey) clearSelection();
     },
-    [placementTool, parentLinkTargetId, placeSymbolAt, clearSelection, screenToWorld, viewport],
+    [placementTool, parentLinkTargetId, placeSymbolAt, clearSelection, screenToWorld, viewport, snapCandidatePoints],
   );
+
+  const onSvgPointerMove = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (!placementTool || parentLinkTargetId || drag.kind !== "none") {
+        if (placementPreview) setPlacementPreview(null);
+        return;
+      }
+      const world = screenToWorld(e.clientX, e.clientY);
+      const snap = computeSnap(world, snapCandidatePoints(new Set()), SNAP_THRESHOLD / viewport.zoom);
+      setPlacementPreview({ x: snap.x, y: snap.y, guideX: snap.guideX, guideY: snap.guideY });
+    },
+    [placementTool, parentLinkTargetId, drag.kind, screenToWorld, snapCandidatePoints, viewport.zoom, placementPreview],
+  );
+
+  const onSvgPointerLeave = useCallback(() => {
+    setPlacementPreview(null);
+  }, []);
 
   useEffect(() => {
     if (drag.kind === "none") return;
@@ -307,6 +334,8 @@ export function Canvas() {
         className={placementTool ? "cursor-crosshair" : "cursor-default"}
         onWheel={handleWheel}
         onPointerDown={onBackgroundPointerDown}
+        onPointerMove={onSvgPointerMove}
+        onPointerLeave={onSvgPointerLeave}
       >
         <defs>
           <pattern id="dot-grid" width={20} height={20} patternUnits="userSpaceOnUse">
@@ -360,15 +389,37 @@ export function Canvas() {
             );
           })}
 
-          {selectedSymbol && !placementTool && !parentLinkTargetId && (
+          {selectedSymbol && !parentLinkTargetId && (
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
           )}
 
-          {snapGuide.x !== null && (
-            <line x1={snapGuide.x} y1={-10000} x2={snapGuide.x} y2={10000} stroke="#f57799" strokeWidth={1} strokeDasharray="4 3" />
+          {placementTool && activePlacementPreview && (
+            <g transform={`translate(${activePlacementPreview.x},${activePlacementPreview.y})`} opacity={0.45} pointerEvents="none">
+              <SymbolShape type={placementTool} stroke="#f57799" />
+            </g>
           )}
-          {snapGuide.y !== null && (
-            <line x1={-10000} y1={snapGuide.y} x2={10000} y2={snapGuide.y} stroke="#f57799" strokeWidth={1} strokeDasharray="4 3" />
+
+          {(snapGuide.x !== null || activePlacementPreview?.guideX != null) && (
+            <line
+              x1={snapGuide.x ?? activePlacementPreview!.guideX!}
+              y1={-10000}
+              x2={snapGuide.x ?? activePlacementPreview!.guideX!}
+              y2={10000}
+              stroke="#f57799"
+              strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+          )}
+          {(snapGuide.y !== null || activePlacementPreview?.guideY != null) && (
+            <line
+              x1={-10000}
+              y1={snapGuide.y ?? activePlacementPreview!.guideY!}
+              x2={10000}
+              y2={snapGuide.y ?? activePlacementPreview!.guideY!}
+              stroke="#f57799"
+              strokeWidth={1}
+              strokeDasharray="4 3"
+            />
           )}
         </g>
       </svg>
