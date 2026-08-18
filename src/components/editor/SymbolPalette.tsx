@@ -11,10 +11,10 @@ export function SymbolPalette() {
 
   return (
     <div className="flex flex-col gap-1 p-3">
-      <h2 className="mb-1 text-xs font-semibold text-neutral-500">記号パレット</h2>
+      <h2 className="mb-1 text-xs font-semibold text-ink/50">記号パレット</h2>
       <button
         className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
-          placementTool === null ? "border-blue-400 bg-blue-50 text-blue-700" : "border-transparent hover:bg-neutral-100"
+          placementTool === null ? "border-pink bg-pink/10 text-pink" : "border-transparent text-ink hover:bg-cream/60"
         }`}
         onClick={() => {
           setPlacementTool(null);
@@ -31,7 +31,7 @@ export function SymbolPalette() {
             <button
               key={type}
               className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm transition ${
-                active ? "border-blue-400 bg-blue-50 text-blue-700" : "border-transparent hover:bg-neutral-100"
+                active ? "border-pink bg-pink/10 text-pink" : "border-transparent text-ink hover:bg-cream/60"
               }`}
               onClick={() => {
                 clearSelection();
@@ -40,7 +40,7 @@ export function SymbolPalette() {
             >
               <svg width={26} height={26} viewBox="-13 -22 26 26">
                 <g transform="translate(0,0)">
-                  <SymbolShape type={type} stroke={active ? "#1d4ed8" : "#374151"} />
+                  <SymbolShape type={type} stroke={active ? "#f57799" : "#2a211d"} />
                 </g>
               </svg>
               <span>{def.label}</span>
@@ -49,7 +49,7 @@ export function SymbolPalette() {
         })}
       </div>
       {placementTool && (
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-ink/50">
           キャンバスをクリックして配置。もう一度ツールを押すか選択ツールに戻ると終了します。
         </p>
       )}

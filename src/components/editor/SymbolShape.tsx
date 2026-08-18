@@ -11,7 +11,7 @@ interface SymbolShapeProps {
  * Renders a symbol pointing "up": foot at (0,0), head at (0,-height).
  * Caller applies translate(x,y) rotate(rotation) around this origin.
  */
-export function SymbolShape({ type, stroke = "#1f2937", strokeWidth = 1.6 }: SymbolShapeProps) {
+export function SymbolShape({ type, stroke = "#2a211d", strokeWidth = 1.6 }: SymbolShapeProps) {
   const height = SYMBOL_DEFS[type].height;
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 

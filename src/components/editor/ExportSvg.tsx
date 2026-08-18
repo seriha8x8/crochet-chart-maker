@@ -49,7 +49,7 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
       <g transform={`translate(${offsetX},${offsetY})`}>
         {visibleSymbols.map((symbol) => (
           <g key={symbol.id} transform={`translate(${symbol.x},${symbol.y}) rotate(${symbol.rotation})`}>
-            <SymbolShape type={symbol.type} stroke="#1f2937" />
+            <SymbolShape type={symbol.type} stroke="#2a211d" />
           </g>
         ))}
       </g>

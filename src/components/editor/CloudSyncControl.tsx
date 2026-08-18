@@ -26,7 +26,7 @@ export function CloudSyncControl() {
 
   if (!configured) {
     return (
-      <p className="text-[11px] leading-relaxed text-neutral-400">
+      <p className="text-[11px] leading-relaxed text-ink/40">
         クラウド保存は未設定です。編み図はブラウザ内に自動保存されます。Supabaseの環境変数を設定すると、アカウントでの保存が使えます。
       </p>
     );
@@ -35,20 +35,20 @@ export function CloudSyncControl() {
   if (!user) {
     return (
       <div className="flex flex-col gap-1.5 text-xs">
-        <span className="font-semibold text-neutral-500">クラウド保存にサインイン</span>
+        <span className="font-semibold text-ink/50">クラウド保存にサインイン</span>
         {magicLinkSent ? (
-          <p className="text-neutral-500">メールを確認してリンクをクリックしてください。</p>
+          <p className="text-ink/50">メールを確認してリンクをクリックしてください。</p>
         ) : (
           <>
             <input
               type="email"
               placeholder="you@example.com"
-              className="rounded border border-neutral-300 px-2 py-1"
+              className="rounded border border-peach/60 px-2 py-1 text-ink"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <button
-              className="rounded bg-neutral-900 px-2 py-1 text-white hover:bg-neutral-700"
+              className="rounded bg-pink px-2 py-1 text-white hover:bg-salmon"
               onClick={async () => {
                 const supabase = getSupabaseClient();
                 if (!supabase || !email) return;
@@ -69,10 +69,10 @@ export function CloudSyncControl() {
 
   return (
     <div className="flex flex-col gap-1.5 text-xs">
-      <span className="truncate text-neutral-500">{user.email}</span>
+      <span className="truncate text-ink/50">{user.email}</span>
       <div className="flex gap-1">
         <button
-          className="flex-1 rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-100"
+          className="flex-1 rounded border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
           onClick={async () => {
             setStatus("保存中…");
             try {
@@ -87,7 +87,7 @@ export function CloudSyncControl() {
           保存
         </button>
         <button
-          className="flex-1 rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-100"
+          className="flex-1 rounded border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
           onClick={async () => {
             setStatus("読み込み中…");
             try {
@@ -112,7 +112,7 @@ export function CloudSyncControl() {
         </button>
       </div>
       <button
-        className="text-left text-neutral-400 hover:underline"
+        className="text-left text-ink/40 hover:underline"
         onClick={async () => {
           const supabase = getSupabaseClient();
           await supabase?.auth.signOut();
@@ -120,7 +120,7 @@ export function CloudSyncControl() {
       >
         サインアウト
       </button>
-      {status && <p className="text-neutral-500">{status}</p>}
+      {status && <p className="text-ink/50">{status}</p>}
     </div>
   );
 }

@@ -12,20 +12,20 @@ export function Editor() {
   useKeyboardShortcuts();
 
   return (
-    <div className="flex h-dvh w-full flex-col overflow-hidden bg-white text-neutral-900">
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-white text-ink">
       <Toolbar />
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-neutral-200">
+        <aside className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-peach/40 bg-white">
           <SymbolPalette />
           <LayerPanel />
-          <div className="mt-auto border-t border-neutral-200 p-3">
+          <div className="mt-auto border-t border-peach/40 p-3">
             <CloudSyncControl />
           </div>
         </aside>
         <main className="min-w-0 flex-1">
           <Canvas />
         </main>
-        <aside className="w-64 shrink-0 overflow-y-auto border-l border-neutral-200">
+        <aside className="w-64 shrink-0 overflow-y-auto border-l border-peach/40 bg-white">
           <PropertiesPanel />
         </aside>
       </div>

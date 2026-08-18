@@ -298,7 +298,7 @@ export function Canvas() {
       : null;
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-neutral-50">
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-cream/20">
       <svg
         ref={svgRef}
         width={size.w}
@@ -310,7 +310,7 @@ export function Canvas() {
       >
         <defs>
           <pattern id="dot-grid" width={20} height={20} patternUnits="userSpaceOnUse">
-            <circle cx={1} cy={1} r={1} fill="#e5e7eb" />
+            <circle cx={1} cy={1} r={1} fill="#ecdcc4" />
           </pattern>
         </defs>
         <rect x={0} y={0} width={size.w} height={size.h} fill="url(#dot-grid)" />
@@ -333,8 +333,8 @@ export function Canvas() {
               : isHighlighted
               ? "#dc2626"
               : isSelected
-              ? "#2563eb"
-              : "#1f2937";
+              ? "#f57799"
+              : "#2a211d";
             return (
               <g
                 key={symbol.id}
@@ -365,17 +365,17 @@ export function Canvas() {
           )}
 
           {snapGuide.x !== null && (
-            <line x1={snapGuide.x} y1={-10000} x2={snapGuide.x} y2={10000} stroke="#f472b6" strokeWidth={1} strokeDasharray="4 3" />
+            <line x1={snapGuide.x} y1={-10000} x2={snapGuide.x} y2={10000} stroke="#f57799" strokeWidth={1} strokeDasharray="4 3" />
           )}
           {snapGuide.y !== null && (
-            <line x1={-10000} y1={snapGuide.y} x2={10000} y2={snapGuide.y} stroke="#f472b6" strokeWidth={1} strokeDasharray="4 3" />
+            <line x1={-10000} y1={snapGuide.y} x2={10000} y2={snapGuide.y} stroke="#f57799" strokeWidth={1} strokeDasharray="4 3" />
           )}
         </g>
       </svg>
 
       {marqueeRect && (
         <div
-          className="pointer-events-none absolute border border-blue-400 bg-blue-400/10"
+          className="pointer-events-none absolute border border-pink bg-pink/10"
           style={{ left: marqueeRect.x, top: marqueeRect.y, width: marqueeRect.w, height: marqueeRect.h }}
         />
       )}
@@ -399,12 +399,12 @@ function RotateHandle({
   const hy = symbol.y - handleDist * Math.cos(rad);
   return (
     <g>
-      <line x1={symbol.x} y1={symbol.y} x2={hx} y2={hy} stroke="#2563eb" strokeWidth={1} strokeDasharray="2 2" opacity={0.6} />
+      <line x1={symbol.x} y1={symbol.y} x2={hx} y2={hy} stroke="#f57799" strokeWidth={1} strokeDasharray="2 2" opacity={0.6} />
       <circle
         cx={hx}
         cy={hy}
         r={7}
-        fill="#2563eb"
+        fill="#f57799"
         stroke="white"
         strokeWidth={1.5}
         style={{ cursor: "grab" }}
@@ -419,11 +419,11 @@ function GuideLayer({ guide }: { guide: import("@/types/chart").GuideState }) {
     const { y, startX, length, stitchSpacing } = guide.chain;
     const ticks = [];
     for (let x = startX; x <= startX + length; x += stitchSpacing) {
-      ticks.push(<line key={x} x1={x} y1={y - 5} x2={x} y2={y + 5} stroke="#c7d2fe" strokeWidth={1} />);
+      ticks.push(<line key={x} x1={x} y1={y - 5} x2={x} y2={y + 5} stroke="#fdc3a1" strokeWidth={1} />);
     }
     return (
       <g opacity={0.8}>
-        <line x1={startX} y1={y} x2={startX + length} y2={y} stroke="#c7d2fe" strokeWidth={1.5} strokeDasharray="6 4" />
+        <line x1={startX} y1={y} x2={startX + length} y2={y} stroke="#fdc3a1" strokeWidth={1.5} strokeDasharray="6 4" />
         {ticks}
       </g>
     );
@@ -439,7 +439,7 @@ function GuideLayer({ guide }: { guide: import("@/types/chart").GuideState }) {
           cy={centerY}
           r={i * ringSpacing}
           fill="none"
-          stroke="#c7d2fe"
+          stroke="#fdc3a1"
           strokeWidth={1.5}
           strokeDasharray="6 4"
         />,
@@ -448,7 +448,7 @@ function GuideLayer({ guide }: { guide: import("@/types/chart").GuideState }) {
     return (
       <g opacity={0.8}>
         {circles}
-        <circle cx={centerX} cy={centerY} r={2} fill="#a5b4fc" />
+        <circle cx={centerX} cy={centerY} r={2} fill="#fb9b8f" />
       </g>
     );
   }
@@ -463,22 +463,22 @@ function ZoomControls({
   setViewport: (updater: (vp: Viewport) => Viewport) => void;
 }) {
   return (
-    <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs shadow-sm">
+    <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-md border border-peach/50 bg-white px-2 py-1 text-xs text-ink shadow-sm">
       <button
-        className="rounded px-2 py-1 hover:bg-neutral-100"
+        className="rounded px-2 py-1 hover:bg-cream/60"
         onClick={() => setViewport((vp) => ({ ...vp, zoom: Math.max(MIN_ZOOM, vp.zoom - 0.1) }))}
       >
         −
       </button>
       <span className="w-10 text-center tabular-nums">{Math.round(viewport.zoom * 100)}%</span>
       <button
-        className="rounded px-2 py-1 hover:bg-neutral-100"
+        className="rounded px-2 py-1 hover:bg-cream/60"
         onClick={() => setViewport((vp) => ({ ...vp, zoom: Math.min(MAX_ZOOM, vp.zoom + 0.1) }))}
       >
         +
       </button>
       <button
-        className="ml-1 rounded px-2 py-1 hover:bg-neutral-100"
+        className="ml-1 rounded px-2 py-1 hover:bg-cream/60"
         onClick={() => setViewport(() => ({ zoom: 1, panX: 0, panY: 0 }))}
       >
         リセット

@@ -16,11 +16,11 @@ export function LayerPanel() {
   const [draftName, setDraftName] = useState("");
 
   return (
-    <div className="flex flex-col gap-1 border-t border-neutral-200 p-3">
+    <div className="flex flex-col gap-1 border-t border-peach/40 p-3">
       <div className="mb-1 flex items-center justify-between">
-        <h2 className="text-xs font-semibold text-neutral-500">レイヤー</h2>
+        <h2 className="text-xs font-semibold text-ink/50">レイヤー</h2>
         <button
-          className="rounded px-1.5 py-0.5 text-xs text-blue-600 hover:bg-blue-50"
+          className="rounded px-1.5 py-0.5 text-xs text-pink hover:bg-pink/10"
           onClick={() => addLayer(`レイヤー${layers.length + 1}`)}
         >
           + 追加
@@ -33,7 +33,7 @@ export function LayerPanel() {
             <li
               key={layer.id}
               className={`flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm ${
-                layer.id === activeLayerId ? "bg-blue-50" : "hover:bg-neutral-100"
+                layer.id === activeLayerId ? "bg-peach/25" : "hover:bg-cream/60"
               }`}
               onClick={() => setActiveLayer(layer.id)}
             >
@@ -50,7 +50,7 @@ export function LayerPanel() {
               {editingId === layer.id ? (
                 <input
                   autoFocus
-                  className="flex-1 rounded border border-blue-300 px-1 py-0.5 text-xs"
+                  className="flex-1 rounded border border-pink/50 px-1 py-0.5 text-xs"
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
                   onBlur={() => {
@@ -78,7 +78,7 @@ export function LayerPanel() {
               )}
               {layers.length > 1 && (
                 <button
-                  className="shrink-0 rounded px-1 text-xs text-neutral-400 hover:bg-red-50 hover:text-red-500"
+                  className="shrink-0 rounded px-1 text-xs text-ink/30 hover:bg-red-50 hover:text-red-500"
                   title="レイヤーを削除"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -91,7 +91,7 @@ export function LayerPanel() {
             </li>
           ))}
       </ul>
-      <p className="mt-1 text-[11px] text-neutral-400">クリックでアクティブ化・ダブルクリックで名称変更</p>
+      <p className="mt-1 text-[11px] text-ink/40">クリックでアクティブ化・ダブルクリックで名称変更</p>
     </div>
   );
 }

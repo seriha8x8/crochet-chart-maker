@@ -25,7 +25,7 @@ export function PropertiesPanel() {
     }
     return (
       <div className="flex flex-col gap-3 p-3">
-        <h2 className="text-xs font-semibold text-neutral-500">接続する記号を選択</h2>
+        <h2 className="text-xs font-semibold text-ink/50">接続する記号を選択</h2>
         <p className="rounded-md bg-purple-50 p-2 text-xs text-purple-700">
           前段の記号をクリックして選択／解除してください（複数選択可）。
         </p>
@@ -37,7 +37,7 @@ export function PropertiesPanel() {
             const p = symbols.find((s) => s.id === pid);
             if (!p) return null;
             return (
-              <li key={pid} className="flex items-center justify-between rounded px-1 py-0.5 hover:bg-neutral-100">
+              <li key={pid} className="flex items-center justify-between rounded px-1 py-0.5 hover:bg-cream/60">
                 <span>{SYMBOL_DEFS[p.type].label}</span>
                 <button className="text-red-500" onClick={() => toggleParent(pid)}>
                   解除
@@ -55,7 +55,7 @@ export function PropertiesPanel() {
         >
           完了して位置をスナップ
         </button>
-        <button className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100" onClick={cancelParentLink}>
+        <button className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60" onClick={cancelParentLink}>
           キャンセル
         </button>
       </div>
@@ -64,7 +64,7 @@ export function PropertiesPanel() {
 
   if (selectedIds.length === 0) {
     return (
-      <div className="p-3 text-xs text-neutral-400">
+      <div className="p-3 text-xs text-ink/40">
         記号を選択するとプロパティが表示されます。
       </div>
     );
@@ -73,16 +73,16 @@ export function PropertiesPanel() {
   if (selectedIds.length > 1) {
     return (
       <div className="flex flex-col gap-3 p-3">
-        <h2 className="text-xs font-semibold text-neutral-500">{selectedIds.length}個選択中</h2>
+        <h2 className="text-xs font-semibold text-ink/50">{selectedIds.length}個選択中</h2>
         <div className="flex gap-2">
           <button
-            className="flex-1 rounded-md border border-neutral-300 px-2 py-1.5 text-sm hover:bg-neutral-100"
+            className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
             onClick={() => rotateSymbols(selectedIds, -15)}
           >
             ⟲ 15°
           </button>
           <button
-            className="flex-1 rounded-md border border-neutral-300 px-2 py-1.5 text-sm hover:bg-neutral-100"
+            className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
             onClick={() => rotateSymbols(selectedIds, 15)}
           >
             ⟳ 15°
@@ -104,39 +104,39 @@ export function PropertiesPanel() {
 
   return (
     <div className="flex flex-col gap-3 p-3">
-      <h2 className="text-xs font-semibold text-neutral-500">記号プロパティ</h2>
-      <div className="text-sm font-medium">{def.label}</div>
+      <h2 className="text-xs font-semibold text-ink/50">記号プロパティ</h2>
+      <div className="text-sm font-medium text-ink">{def.label}</div>
 
-      <label className="flex flex-col gap-1 text-xs text-neutral-600">
+      <label className="flex flex-col gap-1 text-xs text-ink/70">
         回転角度
         <div className="flex items-center gap-1">
           <input
             type="number"
-            className="w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-peach/60 px-2 py-1 text-sm text-ink"
             value={Math.round(symbol.rotation)}
             onChange={(e) => setRotation(symbol.id, Number(e.target.value) || 0)}
           />
           <span>°</span>
         </div>
         <div className="flex gap-1">
-          <button className="flex-1 rounded border border-neutral-300 py-1 hover:bg-neutral-100" onClick={() => rotateSymbols([symbol.id], -90)}>
+          <button className="flex-1 rounded border border-peach/60 py-1 text-ink hover:bg-cream/60" onClick={() => rotateSymbols([symbol.id], -90)}>
             -90°
           </button>
-          <button className="flex-1 rounded border border-neutral-300 py-1 hover:bg-neutral-100" onClick={() => rotateSymbols([symbol.id], -15)}>
+          <button className="flex-1 rounded border border-peach/60 py-1 text-ink hover:bg-cream/60" onClick={() => rotateSymbols([symbol.id], -15)}>
             -15°
           </button>
-          <button className="flex-1 rounded border border-neutral-300 py-1 hover:bg-neutral-100" onClick={() => rotateSymbols([symbol.id], 15)}>
+          <button className="flex-1 rounded border border-peach/60 py-1 text-ink hover:bg-cream/60" onClick={() => rotateSymbols([symbol.id], 15)}>
             +15°
           </button>
-          <button className="flex-1 rounded border border-neutral-300 py-1 hover:bg-neutral-100" onClick={() => rotateSymbols([symbol.id], 90)}>
+          <button className="flex-1 rounded border border-peach/60 py-1 text-ink hover:bg-cream/60" onClick={() => rotateSymbols([symbol.id], 90)}>
             +90°
           </button>
         </div>
       </label>
 
-      <div className="flex flex-col gap-1.5 rounded-md border border-neutral-200 p-2">
-        <span className="text-xs font-semibold text-neutral-500">前段との接続</span>
-        <div className="text-xs text-neutral-600">
+      <div className="flex flex-col gap-1.5 rounded-md border border-peach/50 p-2">
+        <span className="text-xs font-semibold text-ink/50">前段との接続</span>
+        <div className="text-xs text-ink/70">
           親記号: <span className="font-medium">{symbol.parentIds.length}個</span>
         </div>
         <button
@@ -151,6 +151,7 @@ export function PropertiesPanel() {
             <input
               type="radio"
               name="attachType"
+              className="accent-pink"
               checked={symbol.attachType === "stitch"}
               onChange={() => {
                 setAttachType(symbol.id, "stitch" as AttachType);
@@ -163,6 +164,7 @@ export function PropertiesPanel() {
             <input
               type="radio"
               name="attachType"
+              className="accent-pink"
               checked={symbol.attachType === "space"}
               onChange={() => {
                 setAttachType(symbol.id, "space" as AttachType);
