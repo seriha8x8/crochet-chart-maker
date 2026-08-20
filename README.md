@@ -35,19 +35,21 @@ cp .env.example .env.local
 
 未設定の場合は自動的にlocalStorageのみで動作します。
 
-## デプロイ（Cloudflare Pages）
+## デプロイ（Cloudflare Workers / Pages）
 
 サーバー機能（APIルート・サーバーアクション・middleware）を使わないクライアント完結型アプリのため、`next.config.ts` で静的書き出し（`output: "export"`）を行い、生成された `out/` ディレクトリをそのまま配信します。
 
-Cloudflare Pages のプロジェクト設定：
+Cloudflareの「Workers & Pages」からGit連携で作成すると、静的サイトでも新しい **Workers Static Assets** 方式でデプロイされることがあります（classic Pagesの後継）。そのため、`wrangler.jsonc` に `assets.directory` として `out` を指定しています。ダッシュボード側では以下を設定してください：
 
 | 項目 | 値 |
 | --- | --- |
 | ビルドコマンド | `npm run build` |
-| ビルド出力ディレクトリ | `out` |
+| デプロイコマンド | （デフォルトのまま。`wrangler.jsonc` を自動で見つけて `out/` を配信します） |
 | ルートディレクトリ | `/`（リポジトリ直下） |
 
-Supabase連携を使う場合は、Cloudflare Pages の環境変数に `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定してください（ビルド時に埋め込まれるため、Production/Preview両方に設定が必要です）。未設定でもlocalStorageのみで動作します。
+classic Pages（Connect to Git → Pagesプロジェクト）で作った場合は、ビルド出力ディレクトリに `out` を指定するだけで `wrangler.jsonc` は不要です。
+
+Supabase連携を使う場合は、Cloudflareのプロジェクト設定の環境変数に `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定してください（ビルド時に埋め込まれるため、Production/Preview両方に設定が必要です）。未設定でもlocalStorageのみで動作します。
 
 ローカルで書き出し結果を確認する場合：
 
