@@ -53,6 +53,7 @@ export function Canvas() {
   const guide = useChartStore((s) => s.guide);
   const highlightIds = useChartStore((s) => s.highlightIds);
   const parentLinkTargetId = useChartStore((s) => s.parentLinkTargetId);
+  const canvasBackground = useChartStore((s) => s.canvasBackground);
 
   const placeSymbolAt = useChartStore((s) => s.placeSymbolAt);
   const addSymbolsBatch = useChartStore((s) => s.addSymbolsBatch);
@@ -448,8 +449,13 @@ export function Canvas() {
         }
       : null;
 
+  const isDark = canvasBackground === "dark";
+
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-cream/20">
+    <div
+      ref={containerRef}
+      className={`relative h-full w-full overflow-hidden ${isDark ? "bg-neutral-800" : "bg-cream/20"}`}
+    >
       <svg
         ref={svgRef}
         width={size.w}
@@ -463,7 +469,7 @@ export function Canvas() {
       >
         <defs>
           <pattern id="dot-grid" width={20} height={20} patternUnits="userSpaceOnUse">
-            <circle cx={1} cy={1} r={1} fill="#ecdcc4" />
+            <circle cx={1} cy={1} r={1} fill={isDark ? "#57534e" : "#ecdcc4"} />
           </pattern>
         </defs>
         <rect x={0} y={0} width={size.w} height={size.h} fill="url(#dot-grid)" />

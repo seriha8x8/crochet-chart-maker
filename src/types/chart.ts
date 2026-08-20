@@ -32,6 +32,8 @@ export interface Layer {
 
 export type GuideType = "none" | "chain" | "ring";
 
+export type CanvasBackground = "light" | "dark";
+
 export interface ChainGuideParams {
   y: number;
   startX: number;

@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { v4 as uuid } from "uuid";
 import type {
   AttachType,
+  CanvasBackground,
   ChartSymbol,
   GuideState,
   Layer,
@@ -59,6 +60,7 @@ interface ChartState {
   arrayDefaults: { round: ArrayDefaults; straight: ArrayDefaults };
   projects: SavedProject[];
   currentProjectId: string | null;
+  canvasBackground: CanvasBackground;
 
   saveProjectAs: (name: string) => void;
   saveCurrentProject: () => void;
@@ -99,6 +101,7 @@ interface ChartState {
   pasteClipboard: () => void;
 
   setGuide: (guide: Partial<GuideState>) => void;
+  setCanvasBackground: (background: CanvasBackground) => void;
 
   addSymbolsBatch: (
     symbols: Array<{ type: SymbolType; x: number; y: number; rotation: number }>,
@@ -148,6 +151,7 @@ export const useChartStore = create<ChartState>()(
       arrayDefaults: DEFAULT_ARRAY_DEFAULTS,
       projects: [],
       currentProjectId: null,
+      canvasBackground: "light",
 
       saveProjectAs: (name) => {
         const { symbols, layers, guide, projects } = get();
@@ -467,6 +471,7 @@ export const useChartStore = create<ChartState>()(
       },
 
       setGuide: (patch) => set({ guide: { ...get().guide, ...patch } }),
+      setCanvasBackground: (background) => set({ canvasBackground: background }),
 
       addSymbolsBatch: (items) => {
         get().pushHistory();
@@ -561,6 +566,7 @@ export const useChartStore = create<ChartState>()(
         arrayDefaults: state.arrayDefaults,
         projects: state.projects,
         currentProjectId: state.currentProjectId,
+        canvasBackground: state.canvasBackground,
       }),
     },
   ),

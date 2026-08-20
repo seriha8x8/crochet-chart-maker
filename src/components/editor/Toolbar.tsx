@@ -11,6 +11,8 @@ import type { GuideType } from "@/types/chart";
 export function Toolbar() {
   const guide = useChartStore((s) => s.guide);
   const setGuide = useChartStore((s) => s.setGuide);
+  const canvasBackground = useChartStore((s) => s.canvasBackground);
+  const setCanvasBackground = useChartStore((s) => s.setCanvasBackground);
   const resetProject = useChartStore((s) => s.resetProject);
   const undo = useChartStore((s) => s.undo);
   const redo = useChartStore((s) => s.redo);
@@ -119,6 +121,14 @@ export function Toolbar() {
             </div>
           )}
         </div>
+
+        <button
+          className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
+          onClick={() => setCanvasBackground(canvasBackground === "dark" ? "light" : "dark")}
+          title="配色の見え方を確認するためのキャンバス背景切り替え"
+        >
+          背景: {canvasBackground === "dark" ? "ダークグレー" : "白"}
+        </button>
 
         <button
           className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"

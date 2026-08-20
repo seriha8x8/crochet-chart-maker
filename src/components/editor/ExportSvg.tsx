@@ -1,6 +1,6 @@
 import { forwardRef, useMemo } from "react";
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
 import { getFootPoint, getHeadPoint } from "@/lib/symbols/geometry";
 
@@ -49,7 +49,7 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
       <g transform={`translate(${offsetX},${offsetY})`}>
         {visibleSymbols.map((symbol) => (
           <g key={symbol.id} transform={`translate(${symbol.x},${symbol.y}) rotate(${symbol.rotation})`}>
-            <SymbolShape type={symbol.type} stroke="#2a211d" />
+            <SymbolShape type={symbol.type} stroke={symbol.color ?? DEFAULT_SYMBOL_COLOR} />
           </g>
         ))}
       </g>
