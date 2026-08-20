@@ -35,6 +35,15 @@ const DEFAULT_ARRAY_DEFAULTS: { round: ArrayDefaults; straight: ArrayDefaults } 
   straight: { type: "chain", count: 10 },
 };
 
+export interface SavedProject {
+  id: string;
+  name: string;
+  symbols: ChartSymbol[];
+  layers: Layer[];
+  guide: GuideState;
+  updatedAt: string;
+}
+
 interface ChartState {
   symbols: ChartSymbol[];
   layers: Layer[];
@@ -48,6 +57,14 @@ interface ChartState {
   past: HistorySnapshot[];
   future: HistorySnapshot[];
   arrayDefaults: { round: ArrayDefaults; straight: ArrayDefaults };
+  projects: SavedProject[];
+  currentProjectId: string | null;
+
+  saveProjectAs: (name: string) => void;
+  saveCurrentProject: () => void;
+  loadProject: (id: string) => void;
+  renameProject: (id: string, name: string) => void;
+  deleteProject: (id: string) => void;
 
   pushHistory: () => void;
   undo: () => void;
@@ -128,6 +145,60 @@ export const useChartStore = create<ChartState>()(
       past: [],
       future: [],
       arrayDefaults: DEFAULT_ARRAY_DEFAULTS,
+      projects: [],
+      currentProjectId: null,
+
+      saveProjectAs: (name) => {
+        const { symbols, layers, guide, projects } = get();
+        const newProject: SavedProject = {
+          id: uuid(),
+          name,
+          symbols,
+          layers,
+          guide,
+          updatedAt: new Date().toISOString(),
+        };
+        set({ projects: [...projects, newProject], currentProjectId: newProject.id });
+      },
+      saveCurrentProject: () => {
+        const { symbols, layers, guide, projects, currentProjectId } = get();
+        if (!currentProjectId || !projects.some((p) => p.id === currentProjectId)) {
+          get().saveProjectAs("無題の作品");
+          return;
+        }
+        set({
+          projects: projects.map((p) =>
+            p.id === currentProjectId
+              ? { ...p, symbols, layers, guide, updatedAt: new Date().toISOString() }
+              : p,
+          ),
+        });
+      },
+      loadProject: (id) => {
+        const project = get().projects.find((p) => p.id === id);
+        if (!project) return;
+        set({
+          symbols: project.symbols,
+          layers: project.layers,
+          guide: project.guide,
+          currentProjectId: id,
+          selectedIds: [],
+          highlightIds: [],
+          parentLinkTargetId: null,
+          placementTool: null,
+          past: [],
+          future: [],
+        });
+      },
+      renameProject: (id, name) =>
+        set({ projects: get().projects.map((p) => (p.id === id ? { ...p, name } : p)) }),
+      deleteProject: (id) => {
+        const remaining = get().projects.filter((p) => p.id !== id);
+        set({
+          projects: remaining,
+          currentProjectId: get().currentProjectId === id ? null : get().currentProjectId,
+        });
+      },
 
       // Snapshots {symbols, layers} only — selection/guide/UI state aren't undo-worthy content.
       // Call this once per discrete edit, not on every event of a continuous gesture (drag/typing).
@@ -463,6 +534,9 @@ export const useChartStore = create<ChartState>()(
           clipboard: [],
           highlightIds: [],
           guide: DEFAULT_GUIDE,
+          // Detach from whatever project was loaded, so a later "保存" doesn't silently
+          // overwrite it with this blank canvas — the user has to explicitly save-as again.
+          currentProjectId: null,
         });
       },
     }),
@@ -474,6 +548,8 @@ export const useChartStore = create<ChartState>()(
         activeLayerId: state.activeLayerId,
         guide: state.guide,
         arrayDefaults: state.arrayDefaults,
+        projects: state.projects,
+        currentProjectId: state.currentProjectId,
       }),
     },
   ),
