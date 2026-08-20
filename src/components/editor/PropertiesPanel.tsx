@@ -2,6 +2,7 @@
 
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { centroid, getFootPoint } from "@/lib/symbols/geometry";
 import type { AttachType } from "@/types/chart";
 
 export function PropertiesPanel() {
@@ -14,6 +15,8 @@ export function PropertiesPanel() {
   const setAttachType = useChartStore((s) => s.setAttachType);
   const setRotation = useChartStore((s) => s.setRotation);
   const rotateSymbols = useChartStore((s) => s.rotateSymbols);
+  const orbitGroup = useChartStore((s) => s.orbitGroup);
+  const pushHistory = useChartStore((s) => s.pushHistory);
   const deleteSymbols = useChartStore((s) => s.deleteSymbols);
   const toggleParent = useChartStore((s) => s.toggleParent);
   const groupSelection = useChartStore((s) => s.groupSelection);
@@ -78,19 +81,25 @@ export function PropertiesPanel() {
       selected.length > 0 &&
       !!selected[0].groupId &&
       selected.every((s) => s.groupId === selected[0].groupId);
+    const rotateAsGroup = (deltaDeg: number) => {
+      const pivot = centroid(selected.map(getFootPoint));
+      pushHistory();
+      orbitGroup(selectedIds, deltaDeg, pivot);
+    };
     return (
       <div className="flex flex-col gap-3 p-3">
         <h2 className="text-xs font-semibold text-ink/50">{selectedIds.length}個選択中</h2>
+        <p className="text-[11px] text-ink/40">かたまりの中心を軸に位置だけをまとめて回転します（記号自体の向きは変わりません）。</p>
         <div className="flex gap-2">
           <button
             className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
-            onClick={() => rotateSymbols(selectedIds, -15)}
+            onClick={() => rotateAsGroup(-15)}
           >
             ⟲ 15°
           </button>
           <button
             className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
-            onClick={() => rotateSymbols(selectedIds, 15)}
+            onClick={() => rotateAsGroup(15)}
           >
             ⟳ 15°
           </button>

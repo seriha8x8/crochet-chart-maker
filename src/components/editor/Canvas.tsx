@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
-import { getFootPoint, getHeadPoint, type Point } from "@/lib/symbols/geometry";
+import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
 import { computeFillBetween } from "@/lib/symbols/straightArray";
 import type { ChartSymbol } from "@/types/chart";
@@ -27,7 +27,8 @@ type DragMode =
   | { kind: "marquee"; startScreen: { x: number; y: number }; currentScreen: { x: number; y: number }; additive: boolean }
   | { kind: "rotate"; symbolId: string; centerScreen: { x: number; y: number } }
   | { kind: "pan"; startScreen: { x: number; y: number }; startPan: { x: number; y: number } }
-  | { kind: "placeLine"; startWorld: Point; currentWorld: Point };
+  | { kind: "placeLine"; startWorld: Point; currentWorld: Point }
+  | { kind: "rotateGroup"; ids: string[]; pivot: Point; currentAngle: number };
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -205,6 +206,17 @@ export function Canvas() {
     [viewport],
   );
 
+  const onGroupRotateHandlePointerDown = useCallback(
+    (e: React.PointerEvent, ids: string[], pivot: Point) => {
+      e.stopPropagation();
+      const world = screenToWorld(e.clientX, e.clientY);
+      const currentAngle = (Math.atan2(world.y - pivot.y, world.x - pivot.x) * 180) / Math.PI;
+      useChartStore.getState().pushHistory();
+      setDrag({ kind: "rotateGroup", ids, pivot, currentAngle });
+    },
+    [screenToWorld],
+  );
+
   const onBackgroundPointerDown = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
       if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -301,6 +313,15 @@ export function Canvas() {
         const world = screenToWorld(e.clientX, e.clientY);
         const snap = computeSnap(world, snapCandidatePoints(new Set()), SNAP_THRESHOLD / viewport.zoom);
         setDrag({ ...drag, currentWorld: { x: snap.x, y: snap.y } });
+      } else if (drag.kind === "rotateGroup") {
+        // Relative angle change since the last tick — applied as a delta, so it stays
+        // convention-agnostic (unlike the single-symbol handle, a group has no one
+        // "current rotation" value an absolute angle could map onto).
+        const world = screenToWorld(e.clientX, e.clientY);
+        const newAngle = (Math.atan2(world.y - drag.pivot.y, world.x - drag.pivot.x) * 180) / Math.PI;
+        const delta = newAngle - drag.currentAngle;
+        useChartStore.getState().orbitGroup(drag.ids, delta, drag.pivot);
+        setDrag({ ...drag, currentAngle: newAngle });
       }
     };
 
@@ -376,12 +397,11 @@ export function Canvas() {
   const selectedSymbol =
     selectedIds.length === 1 ? symbolById.get(selectedIds[0]) : undefined;
 
-  const selectedGroupBBox = useMemo(() => {
+  const multiSelectInfo = useMemo(() => {
     if (selectedIds.length < 2) return null;
     const selected = selectedIds.map((id) => symbolById.get(id)).filter((s): s is ChartSymbol => !!s);
     if (selected.length === 0) return null;
-    const groupId = selected[0].groupId;
-    if (!groupId || !selected.every((s) => s.groupId === groupId)) return null;
+    const isGroup = !!selected[0].groupId && selected.every((s) => s.groupId === selected[0].groupId);
     const pad = 14;
     let minX = Infinity;
     let minY = Infinity;
@@ -395,7 +415,8 @@ export function Canvas() {
         maxY = Math.max(maxY, p.y + pad);
       }
     }
-    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    const pivot = centroid(selected.map(getFootPoint));
+    return { bbox: { x: minX, y: minY, w: maxX - minX, h: maxY - minY }, pivot, isGroup };
   }, [selectedIds, symbolById]);
 
   // startScreen/currentScreen are viewport-relative (clientX/Y); the overlay div is
@@ -484,12 +505,12 @@ export function Canvas() {
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
           )}
 
-          {selectedGroupBBox && (
+          {multiSelectInfo && multiSelectInfo.isGroup && (
             <rect
-              x={selectedGroupBBox.x}
-              y={selectedGroupBBox.y}
-              width={selectedGroupBBox.w}
-              height={selectedGroupBBox.h}
+              x={multiSelectInfo.bbox.x}
+              y={multiSelectInfo.bbox.y}
+              width={multiSelectInfo.bbox.w}
+              height={multiSelectInfo.bbox.h}
               rx={6}
               fill="none"
               stroke="#f57799"
@@ -497,6 +518,15 @@ export function Canvas() {
               strokeDasharray="5 4"
               opacity={0.5}
               pointerEvents="none"
+            />
+          )}
+
+          {multiSelectInfo && !parentLinkTargetId && (
+            <GroupRotateHandle
+              info={multiSelectInfo}
+              liveAngle={drag.kind === "rotateGroup" ? drag.currentAngle : null}
+              ids={selectedIds}
+              onPointerDown={onGroupRotateHandlePointerDown}
             />
           )}
 
@@ -588,6 +618,45 @@ function RotateHandle({
         strokeWidth={1.5}
         style={{ cursor: "grab" }}
         onPointerDown={(e) => onPointerDown(e, symbol)}
+      />
+    </g>
+  );
+}
+
+interface MultiSelectInfo {
+  bbox: { x: number; y: number; w: number; h: number };
+  pivot: Point;
+  isGroup: boolean;
+}
+
+function GroupRotateHandle({
+  info,
+  liveAngle,
+  ids,
+  onPointerDown,
+}: {
+  info: MultiSelectInfo;
+  /** Raw atan2-convention angle (degrees, 0=right) while actively dragging, else null. */
+  liveAngle: number | null;
+  ids: string[];
+  onPointerDown: (e: React.PointerEvent, ids: string[], pivot: Point) => void;
+}) {
+  const handleDist = info.bbox.h / 2 + 24;
+  const angleRad = liveAngle !== null ? (liveAngle * Math.PI) / 180 : -Math.PI / 2;
+  const hx = info.pivot.x + handleDist * Math.cos(angleRad);
+  const hy = info.pivot.y + handleDist * Math.sin(angleRad);
+  return (
+    <g>
+      <line x1={info.pivot.x} y1={info.pivot.y} x2={hx} y2={hy} stroke="#f57799" strokeWidth={1} strokeDasharray="2 2" opacity={0.6} />
+      <circle
+        cx={hx}
+        cy={hy}
+        r={7}
+        fill="#f57799"
+        stroke="white"
+        strokeWidth={1.5}
+        style={{ cursor: "grab" }}
+        onPointerDown={(e) => onPointerDown(e, ids, info.pivot)}
       />
     </g>
   );

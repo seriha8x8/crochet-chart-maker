@@ -8,7 +8,7 @@ import type {
   Layer,
   SymbolType,
 } from "@/types/chart";
-import { getFootPoint, getHeadPoint, centroid } from "@/lib/symbols/geometry";
+import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
 
 const DEFAULT_LAYER_ID = uuid();
 
@@ -48,6 +48,7 @@ interface ChartState {
   moveSymbols: (ids: string[], dx: number, dy: number) => void;
   deleteSymbols: (ids: string[]) => void;
   rotateSymbols: (ids: string[], deltaDeg: number) => void;
+  orbitGroup: (ids: string[], deltaDeg: number, pivot: Point) => void;
   setRotation: (id: string, deg: number) => void;
 
   selectOnly: (id: string) => void;
@@ -198,6 +199,29 @@ export const useChartStore = create<ChartState>()(
           symbols: get().symbols.map((s) =>
             ids.includes(s.id) ? { ...s, rotation: (s.rotation + deltaDeg + 360) % 360 } : s,
           ),
+        });
+      },
+
+      // Orbits each symbol's position around `pivot` by deltaDeg. Each symbol's own
+      // rotation is left untouched — the cluster's arrangement moves around the pivot,
+      // but every member keeps facing the way it always did. No internal pushHistory:
+      // continuous-drag safe, like moveSymbols.
+      orbitGroup: (ids, deltaDeg, pivot) => {
+        const rad = (deltaDeg * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const idSet = new Set(ids);
+        set({
+          symbols: get().symbols.map((s) => {
+            if (!idSet.has(s.id)) return s;
+            const dx = s.x - pivot.x;
+            const dy = s.y - pivot.y;
+            return {
+              ...s,
+              x: pivot.x + dx * cos - dy * sin,
+              y: pivot.y + dx * sin + dy * cos,
+            };
+          }),
         });
       },
 
