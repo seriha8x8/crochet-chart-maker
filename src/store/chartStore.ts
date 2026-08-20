@@ -25,6 +25,16 @@ interface HistorySnapshot {
   layers: Layer[];
 }
 
+interface ArrayDefaults {
+  type: SymbolType;
+  count: number;
+}
+
+const DEFAULT_ARRAY_DEFAULTS: { round: ArrayDefaults; straight: ArrayDefaults } = {
+  round: { type: "double", count: 12 },
+  straight: { type: "chain", count: 10 },
+};
+
 interface ChartState {
   symbols: ChartSymbol[];
   layers: Layer[];
@@ -37,6 +47,7 @@ interface ChartState {
   parentLinkTargetId: string | null;
   past: HistorySnapshot[];
   future: HistorySnapshot[];
+  arrayDefaults: { round: ArrayDefaults; straight: ArrayDefaults };
 
   pushHistory: () => void;
   undo: () => void;
@@ -74,6 +85,8 @@ interface ChartState {
   addSymbolsBatch: (
     symbols: Array<{ type: SymbolType; x: number; y: number; rotation: number }>,
   ) => void;
+
+  setArrayDefaults: (kind: "round" | "straight", patch: ArrayDefaults) => void;
 
   startParentLink: (symbolId: string) => void;
   cancelParentLink: () => void;
@@ -114,6 +127,7 @@ export const useChartStore = create<ChartState>()(
       parentLinkTargetId: null,
       past: [],
       future: [],
+      arrayDefaults: DEFAULT_ARRAY_DEFAULTS,
 
       // Snapshots {symbols, layers} only — selection/guide/UI state aren't undo-worthy content.
       // Call this once per discrete edit, not on every event of a continuous gesture (drag/typing).
@@ -361,8 +375,8 @@ export const useChartStore = create<ChartState>()(
           return {
             ...s,
             id: idMap.get(s.id)!,
-            x: s.x + offset,
-            y: s.y + offset,
+            x: s.x,
+            y: s.y - offset,
             layerId: activeLayerId,
             parentIds: s.parentIds.filter((p) => idMap.has(p)).map((p) => idMap.get(p)!),
             groupId: newGroupId,
@@ -393,6 +407,9 @@ export const useChartStore = create<ChartState>()(
         }));
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },
+
+      setArrayDefaults: (kind, patch) =>
+        set({ arrayDefaults: { ...get().arrayDefaults, [kind]: patch } }),
 
       // pushHistory happens once here, covering the whole link session (every toggle +
       // the final snap), so undo reverts the entire "pick parents" gesture in one step.
@@ -456,6 +473,7 @@ export const useChartStore = create<ChartState>()(
         layers: state.layers,
         activeLayerId: state.activeLayerId,
         guide: state.guide,
+        arrayDefaults: state.arrayDefaults,
       }),
     },
   ),

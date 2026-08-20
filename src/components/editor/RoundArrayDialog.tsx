@@ -9,9 +9,11 @@ import type { SymbolType } from "@/types/chart";
 export function RoundArrayDialog({ onClose }: { onClose: () => void }) {
   const guide = useChartStore((s) => s.guide);
   const addSymbolsBatch = useChartStore((s) => s.addSymbolsBatch);
+  const lastDefaults = useChartStore((s) => s.arrayDefaults.round);
+  const setArrayDefaults = useChartStore((s) => s.setArrayDefaults);
 
-  const [type, setType] = useState<SymbolType>("double");
-  const [count, setCount] = useState(12);
+  const [type, setType] = useState<SymbolType>(lastDefaults.type);
+  const [count, setCount] = useState(lastDefaults.count);
   const [isFullCircle, setIsFullCircle] = useState(true);
   const [startAngle, setStartAngle] = useState(0);
   const [arcRange, setArcRange] = useState(180);
@@ -152,6 +154,7 @@ export function RoundArrayDialog({ onClose }: { onClose: () => void }) {
               className="rounded-md bg-pink px-3 py-1.5 text-white hover:bg-salmon"
               onClick={() => {
                 addSymbolsBatch(preview.map((p) => ({ type, x: p.x, y: p.y, rotation: p.rotation })));
+                setArrayDefaults("round", { type, count });
                 onClose();
               }}
             >

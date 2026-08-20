@@ -9,9 +9,11 @@ import type { SymbolType } from "@/types/chart";
 export function StraightArrayDialog({ onClose }: { onClose: () => void }) {
   const guide = useChartStore((s) => s.guide);
   const addSymbolsBatch = useChartStore((s) => s.addSymbolsBatch);
+  const lastDefaults = useChartStore((s) => s.arrayDefaults.straight);
+  const setArrayDefaults = useChartStore((s) => s.setArrayDefaults);
 
-  const [type, setType] = useState<SymbolType>("chain");
-  const [count, setCount] = useState(10);
+  const [type, setType] = useState<SymbolType>(lastDefaults.type);
+  const [count, setCount] = useState(lastDefaults.count);
   const [startX, setStartX] = useState(guide.chain.startX);
   const [startY, setStartY] = useState(guide.chain.y);
   const [spacing, setSpacing] = useState(guide.chain.stitchSpacing);
@@ -121,6 +123,7 @@ export function StraightArrayDialog({ onClose }: { onClose: () => void }) {
               className="rounded-md bg-pink px-3 py-1.5 text-white hover:bg-salmon"
               onClick={() => {
                 addSymbolsBatch(preview.map((p) => ({ type, x: p.x, y: p.y, rotation: 0 })));
+                setArrayDefaults("straight", { type, count });
                 onClose();
               }}
             >
