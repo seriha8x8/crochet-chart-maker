@@ -1,6 +1,10 @@
 export function downloadSvgAsPng(svgEl: SVGSVGElement, filename: string, scale = 2) {
   const clone = svgEl.cloneNode(true) as SVGSVGElement;
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  // The source element is kept off-screen via inline `position:fixed; left:-99999px`.
+  // Carrying that over into the serialized document blanks the rasterized image entirely
+  // (verified: an otherwise-identical SVG renders fine with this attribute removed).
+  clone.removeAttribute("style");
 
   const widthAttr = svgEl.getAttribute("width") || svgEl.viewBox.baseVal.width.toString();
   const heightAttr = svgEl.getAttribute("height") || svgEl.viewBox.baseVal.height.toString();
