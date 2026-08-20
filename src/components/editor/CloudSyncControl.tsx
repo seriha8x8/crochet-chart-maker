@@ -27,7 +27,7 @@ export function CloudSyncControl() {
   if (!configured) {
     return (
       <p className="text-[11px] leading-relaxed text-ink/40">
-        クラウド保存は未設定です。編み図はブラウザ内に自動保存されます。Supabaseの環境変数を設定すると、アカウントでの保存が使えます。
+        編み図はこの端末のブラウザに自動保存されます。
       </p>
     );
   }
