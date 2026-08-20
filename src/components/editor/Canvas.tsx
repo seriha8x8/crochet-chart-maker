@@ -4,13 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
-import { getFootPoint, getHeadPoint } from "@/lib/symbols/geometry";
+import { getFootPoint, getHeadPoint, type Point } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
+import { computeFillBetween } from "@/lib/symbols/straightArray";
 import type { ChartSymbol } from "@/types/chart";
 
 const SNAP_THRESHOLD = 9;
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 3;
+/** Below this drag distance (world units), a placement drag is treated as a plain click. */
+const PLACE_LINE_MIN_DRAG = 6;
 
 interface Viewport {
   zoom: number;
@@ -23,7 +26,8 @@ type DragMode =
   | { kind: "moveSelection"; startWorld: { x: number; y: number }; startPositions: Map<string, { x: number; y: number }>; moved: boolean }
   | { kind: "marquee"; startScreen: { x: number; y: number }; currentScreen: { x: number; y: number }; additive: boolean }
   | { kind: "rotate"; symbolId: string; centerScreen: { x: number; y: number } }
-  | { kind: "pan"; startScreen: { x: number; y: number }; startPan: { x: number; y: number } };
+  | { kind: "pan"; startScreen: { x: number; y: number }; startPan: { x: number; y: number } }
+  | { kind: "placeLine"; startWorld: Point; currentWorld: Point };
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +54,7 @@ export function Canvas() {
   const parentLinkTargetId = useChartStore((s) => s.parentLinkTargetId);
 
   const placeSymbolAt = useChartStore((s) => s.placeSymbolAt);
+  const addSymbolsBatch = useChartStore((s) => s.addSymbolsBatch);
   const selectOnly = useChartStore((s) => s.selectOnly);
   const toggleSelect = useChartStore((s) => s.toggleSelect);
   const setSelection = useChartStore((s) => s.setSelection);
@@ -68,6 +73,10 @@ export function Canvas() {
   );
   const symbolById = useMemo(() => new Map(symbols.map((s) => [s.id, s])), [symbols]);
   const activePlacementPreview = placementTool ? placementPreview : null;
+  const placeLinePoints =
+    drag.kind === "placeLine"
+      ? computeFillBetween(drag.startWorld, drag.currentWorld, Math.max(4, guide.chain.stitchSpacing))
+      : null;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -186,6 +195,7 @@ export function Canvas() {
         x: rect.left + viewport.panX + symbol.x * viewport.zoom,
         y: rect.top + viewport.panY + symbol.y * viewport.zoom,
       };
+      useChartStore.getState().pushHistory();
       setDrag({ kind: "rotate", symbolId: symbol.id, centerScreen });
     },
     [viewport],
@@ -205,9 +215,12 @@ export function Canvas() {
         return;
       }
       if (placementTool) {
+        // Don't place yet: a plain click places one symbol, but a drag fills a whole line
+        // of them evenly between here and the release point. Decided on pointerup.
         const snap = computeSnap(world, snapCandidatePoints(new Set()), SNAP_THRESHOLD / viewport.zoom);
-        placeSymbolAt(snap.x, snap.y);
+        const startPoint = { x: snap.x, y: snap.y };
         setPlacementPreview(null);
+        setDrag({ kind: "placeLine", startWorld: startPoint, currentWorld: startPoint });
         return;
       }
       setDrag({
@@ -218,7 +231,7 @@ export function Canvas() {
       });
       if (!e.shiftKey) clearSelection();
     },
-    [placementTool, parentLinkTargetId, placeSymbolAt, clearSelection, screenToWorld, viewport, snapCandidatePoints],
+    [placementTool, parentLinkTargetId, clearSelection, screenToWorld, viewport, snapCandidatePoints],
   );
 
   const onSvgPointerMove = useCallback(
@@ -247,6 +260,7 @@ export function Canvas() {
         const dx = world.x - drag.startWorld.x;
         const dy = world.y - drag.startWorld.y;
         if (Math.abs(dx) + Math.abs(dy) > 1 && !drag.moved) {
+          useChartStore.getState().pushHistory();
           setDrag({ ...drag, moved: true });
         }
         const excludeIds = new Set(drag.startPositions.keys());
@@ -279,6 +293,10 @@ export function Canvas() {
         const dx = e.clientX - drag.startScreen.x;
         const dy = e.clientY - drag.startScreen.y;
         setViewport((vp) => ({ ...vp, panX: drag.startPan.x + dx, panY: drag.startPan.y + dy }));
+      } else if (drag.kind === "placeLine") {
+        const world = screenToWorld(e.clientX, e.clientY);
+        const snap = computeSnap(world, snapCandidatePoints(new Set()), SNAP_THRESHOLD / viewport.zoom);
+        setDrag({ ...drag, currentWorld: { x: snap.x, y: snap.y } });
       }
     };
 
@@ -307,6 +325,18 @@ export function Canvas() {
       } else if (drag.kind === "moveSelection") {
         if (!drag.moved && clickCandidate) {
           setHighlightFromSymbol(clickCandidate);
+        }
+      } else if (drag.kind === "placeLine") {
+        const dist = Math.hypot(
+          drag.currentWorld.x - drag.startWorld.x,
+          drag.currentWorld.y - drag.startWorld.y,
+        );
+        if (dist < PLACE_LINE_MIN_DRAG) {
+          placeSymbolAt(drag.startWorld.x, drag.startWorld.y);
+        } else if (placementTool) {
+          const spacing = Math.max(4, guide.chain.stitchSpacing);
+          const points = computeFillBetween(drag.startWorld, drag.currentWorld, spacing);
+          addSymbolsBatch(points.map((p) => ({ type: placementTool, x: p.x, y: p.y, rotation: 0 })));
         }
       }
       setClickCandidate(null);
@@ -412,9 +442,30 @@ export function Canvas() {
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
           )}
 
-          {placementTool && activePlacementPreview && (
+          {placementTool && activePlacementPreview && !placeLinePoints && (
             <g transform={`translate(${activePlacementPreview.x},${activePlacementPreview.y})`} opacity={0.45} pointerEvents="none">
               <SymbolShape type={placementTool} stroke="#f57799" />
+            </g>
+          )}
+
+          {placementTool && placeLinePoints && (
+            <g pointerEvents="none">
+              {placeLinePoints.length > 1 && (
+                <line
+                  x1={placeLinePoints[0].x}
+                  y1={placeLinePoints[0].y}
+                  x2={placeLinePoints[placeLinePoints.length - 1].x}
+                  y2={placeLinePoints[placeLinePoints.length - 1].y}
+                  stroke="#f57799"
+                  strokeWidth={1}
+                  strokeDasharray="4 3"
+                />
+              )}
+              {placeLinePoints.map((p, i) => (
+                <g key={i} transform={`translate(${p.x},${p.y})`} opacity={0.45}>
+                  <SymbolShape type={placementTool} stroke="#f57799" />
+                </g>
+              ))}
             </g>
           )}
 

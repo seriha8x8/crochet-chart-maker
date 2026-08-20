@@ -26,3 +26,22 @@ export function computeStraightArray(input: StraightArrayInput): StraightArrayRe
   }
   return results;
 }
+
+/**
+ * Evenly fills the straight span between two points (both endpoints included) using
+ * roughly `spacing` between neighbors — the actual spacing is stretched slightly so the
+ * last symbol lands exactly on `end`, for a "place the same symbol from here to here" drag.
+ */
+export function computeFillBetween(start: Point, end: Point, spacing: number): Point[] {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < spacing * 0.5) return [start];
+  const count = Math.max(2, Math.round(dist / spacing) + 1);
+  const points: Point[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    points.push({ x: start.x + dx * t, y: start.y + dy * t });
+  }
+  return points;
+}

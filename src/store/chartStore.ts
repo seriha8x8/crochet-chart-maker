@@ -18,6 +18,13 @@ const DEFAULT_GUIDE: GuideState = {
   ring: { centerX: 400, centerY: 300, ringCount: 4, ringSpacing: 34 },
 };
 
+const MAX_HISTORY = 50;
+
+interface HistorySnapshot {
+  symbols: ChartSymbol[];
+  layers: Layer[];
+}
+
 interface ChartState {
   symbols: ChartSymbol[];
   layers: Layer[];
@@ -28,6 +35,12 @@ interface ChartState {
   clipboard: ChartSymbol[];
   highlightIds: string[];
   parentLinkTargetId: string | null;
+  past: HistorySnapshot[];
+  future: HistorySnapshot[];
+
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
 
   setPlacementTool: (type: SymbolType | null) => void;
   placeSymbolAt: (x: number, y: number) => void;
@@ -94,12 +107,50 @@ export const useChartStore = create<ChartState>()(
       clipboard: [],
       highlightIds: [],
       parentLinkTargetId: null,
+      past: [],
+      future: [],
+
+      // Snapshots {symbols, layers} only — selection/guide/UI state aren't undo-worthy content.
+      // Call this once per discrete edit, not on every event of a continuous gesture (drag/typing).
+      pushHistory: () => {
+        const { symbols, layers, past } = get();
+        set({ past: [...past, { symbols, layers }].slice(-MAX_HISTORY), future: [] });
+      },
+      undo: () => {
+        const { past, future, symbols, layers } = get();
+        if (past.length === 0) return;
+        const previous = past[past.length - 1];
+        set({
+          symbols: previous.symbols,
+          layers: previous.layers,
+          past: past.slice(0, -1),
+          future: [...future, { symbols, layers }],
+          selectedIds: [],
+          highlightIds: [],
+          parentLinkTargetId: null,
+        });
+      },
+      redo: () => {
+        const { past, future, symbols, layers } = get();
+        if (future.length === 0) return;
+        const next = future[future.length - 1];
+        set({
+          symbols: next.symbols,
+          layers: next.layers,
+          future: future.slice(0, -1),
+          past: [...past, { symbols, layers }],
+          selectedIds: [],
+          highlightIds: [],
+          parentLinkTargetId: null,
+        });
+      },
 
       setPlacementTool: (type) => set({ placementTool: type, parentLinkTargetId: null }),
 
       placeSymbolAt: (x, y) => {
         const { placementTool, activeLayerId, symbols } = get();
         if (!placementTool) return;
+        get().pushHistory();
         const newSymbol: ChartSymbol = {
           id: uuid(),
           type: placementTool,
@@ -116,14 +167,18 @@ export const useChartStore = create<ChartState>()(
       updateSymbol: (id, patch) =>
         set({ symbols: get().symbols.map((s) => (s.id === id ? { ...s, ...patch } : s)) }),
 
-      moveSymbols: (ids, dx, dy) =>
+      // No internal pushHistory: used for both discrete arrow-key nudges and (in principle)
+      // continuous gestures, so callers push history themselves when a new gesture starts.
+      moveSymbols: (ids, dx, dy) => {
         set({
           symbols: get().symbols.map((s) =>
             ids.includes(s.id) ? { ...s, x: s.x + dx, y: s.y + dy } : s,
           ),
-        }),
+        });
+      },
 
       deleteSymbols: (ids) => {
+        get().pushHistory();
         const idSet = new Set(ids);
         set({
           symbols: get()
@@ -133,12 +188,14 @@ export const useChartStore = create<ChartState>()(
         });
       },
 
-      rotateSymbols: (ids, deltaDeg) =>
+      rotateSymbols: (ids, deltaDeg) => {
+        get().pushHistory();
         set({
           symbols: get().symbols.map((s) =>
             ids.includes(s.id) ? { ...s, rotation: (s.rotation + deltaDeg + 360) % 360 } : s,
           ),
-        }),
+        });
+      },
 
       setRotation: (id, deg) =>
         set({
@@ -158,17 +215,23 @@ export const useChartStore = create<ChartState>()(
       clearSelection: () => set({ selectedIds: [], highlightIds: [] }),
 
       addLayer: (name) => {
+        get().pushHistory();
         const layers = get().layers;
         const newLayer: Layer = { id: uuid(), name, visible: true, order: layers.length };
         set({ layers: [...layers, newLayer], activeLayerId: newLayer.id });
       },
-      renameLayer: (id, name) =>
-        set({ layers: get().layers.map((l) => (l.id === id ? { ...l, name } : l)) }),
-      toggleLayerVisibility: (id) =>
-        set({ layers: get().layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)) }),
+      renameLayer: (id, name) => {
+        get().pushHistory();
+        set({ layers: get().layers.map((l) => (l.id === id ? { ...l, name } : l)) });
+      },
+      toggleLayerVisibility: (id) => {
+        get().pushHistory();
+        set({ layers: get().layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)) });
+      },
       removeLayer: (id) => {
         const layers = get().layers;
         if (layers.length <= 1) return;
+        get().pushHistory();
         const remaining = layers.filter((l) => l.id !== id);
         const fallback = remaining[0].id;
         set({
@@ -187,6 +250,7 @@ export const useChartStore = create<ChartState>()(
       pasteClipboard: () => {
         const { clipboard, activeLayerId, symbols } = get();
         if (clipboard.length === 0) return;
+        get().pushHistory();
         const idMap = new Map<string, string>();
         clipboard.forEach((s) => idMap.set(s.id, uuid()));
         const offset = 24;
@@ -204,6 +268,7 @@ export const useChartStore = create<ChartState>()(
       setGuide: (patch) => set({ guide: { ...get().guide, ...patch } }),
 
       addSymbolsBatch: (items) => {
+        get().pushHistory();
         const { activeLayerId, symbols } = get();
         const created: ChartSymbol[] = items.map((item) => ({
           id: uuid(),
@@ -218,7 +283,12 @@ export const useChartStore = create<ChartState>()(
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },
 
-      startParentLink: (symbolId) => set({ parentLinkTargetId: symbolId }),
+      // pushHistory happens once here, covering the whole link session (every toggle +
+      // the final snap), so undo reverts the entire "pick parents" gesture in one step.
+      startParentLink: (symbolId) => {
+        get().pushHistory();
+        set({ parentLinkTargetId: symbolId });
+      },
       cancelParentLink: () => set({ parentLinkTargetId: null }),
       toggleParent: (parentId) => {
         const { parentLinkTargetId, symbols } = get();
@@ -234,8 +304,10 @@ export const useChartStore = create<ChartState>()(
           }),
         });
       },
-      setAttachType: (symbolId, attachType) =>
-        set({ symbols: get().symbols.map((s) => (s.id === symbolId ? { ...s, attachType } : s)) }),
+      setAttachType: (symbolId, attachType) => {
+        get().pushHistory();
+        set({ symbols: get().symbols.map((s) => (s.id === symbolId ? { ...s, attachType } : s)) });
+      },
       applyAttachSnap: (symbolId) => {
         const { symbols } = get();
         const target = symbols.find((s) => s.id === symbolId);
@@ -253,7 +325,8 @@ export const useChartStore = create<ChartState>()(
         set({ highlightIds: symbol ? symbol.parentIds : [] });
       },
 
-      resetProject: () =>
+      resetProject: () => {
+        get().pushHistory();
         set({
           symbols: [],
           layers: [{ id: DEFAULT_LAYER_ID, name: "レイヤー1", visible: true, order: 0 }],
@@ -262,7 +335,8 @@ export const useChartStore = create<ChartState>()(
           clipboard: [],
           highlightIds: [],
           guide: DEFAULT_GUIDE,
-        }),
+        });
+      },
     }),
     {
       name: "crochet-chart-project",

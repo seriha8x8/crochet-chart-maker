@@ -12,6 +12,10 @@ export function Toolbar() {
   const guide = useChartStore((s) => s.guide);
   const setGuide = useChartStore((s) => s.setGuide);
   const resetProject = useChartStore((s) => s.resetProject);
+  const undo = useChartStore((s) => s.undo);
+  const redo = useChartStore((s) => s.redo);
+  const canUndo = useChartStore((s) => s.past.length > 0);
+  const canRedo = useChartStore((s) => s.future.length > 0);
 
   const [showGuidePopover, setShowGuidePopover] = useState(false);
   const [showRoundDialog, setShowRoundDialog] = useState(false);
@@ -25,6 +29,25 @@ export function Toolbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <button
+            className="rounded-md border border-peach/60 px-2.5 py-1.5 text-sm text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            onClick={undo}
+            disabled={!canUndo}
+            title="元に戻す (Ctrl/Cmd+Z)"
+          >
+            ↶
+          </button>
+          <button
+            className="rounded-md border border-peach/60 px-2.5 py-1.5 text-sm text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            onClick={redo}
+            disabled={!canRedo}
+            title="やり直す (Ctrl/Cmd+Shift+Z)"
+          >
+            ↷
+          </button>
+        </div>
+
         <div className="relative">
           <button
             className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
