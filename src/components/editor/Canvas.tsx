@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
 import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
@@ -508,7 +508,7 @@ export function Canvas() {
               ? "#dc2626"
               : isSelected
               ? "#f57799"
-              : "#2a211d";
+              : symbol.color ?? DEFAULT_SYMBOL_COLOR;
             return (
               <g
                 key={symbol.id}

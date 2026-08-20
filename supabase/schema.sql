@@ -30,8 +30,12 @@ create table if not exists chart_symbols (
   rotation double precision not null default 0,
   layer_id uuid not null references chart_layers (id) on delete cascade,
   parent_ids uuid[] not null default '{}',
-  attach_type text not null default 'stitch'
+  attach_type text not null default 'stitch',
+  color text
 );
+
+-- Migration for tables created before the color column existed.
+alter table chart_symbols add column if not exists color text;
 
 create index if not exists chart_layers_user_id_idx on chart_layers (user_id);
 create index if not exists chart_symbols_user_id_idx on chart_symbols (user_id);

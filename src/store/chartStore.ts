@@ -79,6 +79,7 @@ interface ChartState {
   orbitGroup: (ids: string[], deltaDeg: number, pivot: Point) => void;
   duplicateMirrored: (ids: string[], axis: "horizontal" | "vertical") => void;
   setRotation: (id: string, deg: number) => void;
+  setSymbolColor: (ids: string[], color: string | null) => void;
 
   selectOnly: (id: string) => void;
   toggleSelect: (id: string) => void;
@@ -251,6 +252,7 @@ export const useChartStore = create<ChartState>()(
           parentIds: [],
           attachType: "stitch",
           groupId: null,
+          color: null,
         };
         set({ symbols: [...symbols, newSymbol], selectedIds: [newSymbol.id] });
       },
@@ -364,6 +366,14 @@ export const useChartStore = create<ChartState>()(
           ),
         }),
 
+      setSymbolColor: (ids, color) => {
+        get().pushHistory();
+        const idSet = new Set(ids);
+        set({
+          symbols: get().symbols.map((s) => (idSet.has(s.id) ? { ...s, color } : s)),
+        });
+      },
+
       selectOnly: (id) => set({ selectedIds: [id] }),
       toggleSelect: (id) =>
         set((state) => ({
@@ -475,6 +485,7 @@ export const useChartStore = create<ChartState>()(
           parentIds: [],
           attachType: "stitch",
           groupId,
+          color: null,
         }));
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },

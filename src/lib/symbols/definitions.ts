@@ -10,6 +10,8 @@ export interface SymbolDef {
   width: number;
 }
 
+export const DEFAULT_SYMBOL_COLOR = "#2a211d";
+
 export const SYMBOL_ORDER: SymbolType[] = [
   "ring",
   "chain",

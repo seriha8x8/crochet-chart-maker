@@ -19,6 +19,8 @@ export interface ChartSymbol {
   parentIds: string[];
   attachType: AttachType;
   groupId: string | null;
+  /** null = use the default ink color */
+  color: string | null;
 }
 
 export interface Layer {

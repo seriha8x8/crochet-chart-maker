@@ -42,6 +42,7 @@ export async function saveProjectToCloud(userId: string, project: CloudProject):
         layer_id: s.layerId,
         parent_ids: s.parentIds,
         attach_type: s.attachType,
+        color: s.color,
       })),
     );
     if (symbolsError) throw symbolsError;
@@ -68,7 +69,7 @@ export async function loadProjectFromCloud(userId: string): Promise<CloudProject
 
   const { data: symbolRows, error: symbolsError } = await supabase
     .from("chart_symbols")
-    .select("id, type, x, y, rotation, layer_id, parent_ids, attach_type")
+    .select("id, type, x, y, rotation, layer_id, parent_ids, attach_type, color")
     .eq("user_id", userId);
   if (symbolsError) throw symbolsError;
 
@@ -89,6 +90,7 @@ export async function loadProjectFromCloud(userId: string): Promise<CloudProject
       layerId: s.layer_id,
       parentIds: s.parent_ids ?? [],
       attachType: s.attach_type,
+      color: s.color ?? null,
     })) as ChartSymbol[],
   };
 }

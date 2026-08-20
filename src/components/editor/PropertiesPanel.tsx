@@ -1,7 +1,7 @@
 "use client";
 
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { centroid, getFootPoint } from "@/lib/symbols/geometry";
 import type { AttachType } from "@/types/chart";
 
@@ -14,6 +14,7 @@ export function PropertiesPanel() {
   const applyAttachSnap = useChartStore((s) => s.applyAttachSnap);
   const setAttachType = useChartStore((s) => s.setAttachType);
   const setRotation = useChartStore((s) => s.setRotation);
+  const setSymbolColor = useChartStore((s) => s.setSymbolColor);
   const rotateSymbols = useChartStore((s) => s.rotateSymbols);
   const orbitGroup = useChartStore((s) => s.orbitGroup);
   const pushHistory = useChartStore((s) => s.pushHistory);
@@ -105,6 +106,22 @@ export function PropertiesPanel() {
             ⟳ 15°
           </button>
         </div>
+        <label className="flex items-center gap-2 text-xs text-ink/70">
+          色
+          <input
+            type="color"
+            className="h-7 w-7 cursor-pointer rounded border border-peach/60 p-0.5"
+            value={selected[0].color ?? DEFAULT_SYMBOL_COLOR}
+            onChange={(e) => setSymbolColor(selectedIds, e.target.value)}
+          />
+          <button
+            className="text-[11px] text-ink/40 hover:text-pink"
+            onClick={() => setSymbolColor(selectedIds, null)}
+          >
+            デフォルトに戻す
+          </button>
+        </label>
+
         {isOneGroup ? (
           <button
             className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
@@ -184,6 +201,24 @@ export function PropertiesPanel() {
             +90°
           </button>
         </div>
+      </label>
+
+      <label className="flex items-center gap-2 text-xs text-ink/70">
+        色
+        <input
+          type="color"
+          className="h-7 w-7 cursor-pointer rounded border border-peach/60 p-0.5"
+          value={symbol.color ?? DEFAULT_SYMBOL_COLOR}
+          onChange={(e) => setSymbolColor([symbol.id], e.target.value)}
+        />
+        {symbol.color && (
+          <button
+            className="text-[11px] text-ink/40 hover:text-pink"
+            onClick={() => setSymbolColor([symbol.id], null)}
+          >
+            デフォルトに戻す
+          </button>
+        )}
       </label>
 
       <div className="flex flex-col gap-1.5 rounded-md border border-peach/50 p-2">
