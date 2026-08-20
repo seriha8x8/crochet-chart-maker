@@ -202,10 +202,10 @@ export const useChartStore = create<ChartState>()(
         });
       },
 
-      // Orbits each symbol's position around `pivot` by deltaDeg. Each symbol's own
-      // rotation is left untouched — the cluster's arrangement moves around the pivot,
-      // but every member keeps facing the way it always did. No internal pushHistory:
-      // continuous-drag safe, like moveSymbols.
+      // Rigid-body rotation: orbits each symbol's position around `pivot` by deltaDeg
+      // AND spins its own rotation by the same amount, so a horizontal row rotated 90°
+      // comes out as a vertical column of upright symbols — the whole cluster turns as
+      // one object. No internal pushHistory: continuous-drag safe, like moveSymbols.
       orbitGroup: (ids, deltaDeg, pivot) => {
         const rad = (deltaDeg * Math.PI) / 180;
         const cos = Math.cos(rad);
@@ -220,6 +220,7 @@ export const useChartStore = create<ChartState>()(
               ...s,
               x: pivot.x + dx * cos - dy * sin,
               y: pivot.y + dx * sin + dy * cos,
+              rotation: (s.rotation + deltaDeg + 360) % 360,
             };
           }),
         });

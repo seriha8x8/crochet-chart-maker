@@ -89,7 +89,7 @@ export function PropertiesPanel() {
     return (
       <div className="flex flex-col gap-3 p-3">
         <h2 className="text-xs font-semibold text-ink/50">{selectedIds.length}個選択中</h2>
-        <p className="text-[11px] text-ink/40">かたまりの中心を軸に位置だけをまとめて回転します（記号自体の向きは変わりません）。</p>
+        <p className="text-[11px] text-ink/40">かたまりの中心を軸に、位置も記号の向きもまとめて回転します。</p>
         <div className="flex gap-2">
           <button
             className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
