@@ -19,26 +19,83 @@ export function ProjectPanel() {
 
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [draftName, setDraftName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [showList, setShowList] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameDraft, setRenameDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
 
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
-  const others = projects.filter((p) => p.id !== currentProjectId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const sortedProjects = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
   const flashSaved = () => {
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
   };
 
+  const commitRename = () => {
+    if (currentProject && renameDraft.trim()) renameProject(currentProject.id, renameDraft.trim());
+    setIsRenaming(false);
+  };
+
   return (
     <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
       <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
 
-      <div className="truncate text-sm font-medium text-ink">
-        {currentProject ? currentProject.name : "未保存の作品"}
-      </div>
+      {sortedProjects.length > 0 ? (
+        <select
+          className="w-full truncate rounded-md border border-peach/60 bg-white px-2 py-1 text-sm text-ink"
+          value={currentProjectId ?? ""}
+          onChange={(e) => {
+            if (e.target.value) loadProject(e.target.value);
+          }}
+        >
+          {!currentProject && <option value="">未保存の作品</option>}
+          {sortedProjects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}（{formatDate(p.updatedAt)}）
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div className="truncate text-sm font-medium text-ink">未保存の作品</div>
+      )}
+
+      {currentProject && (
+        <div className="flex gap-1.5 text-xs">
+          {isRenaming ? (
+            <input
+              autoFocus
+              className="min-w-0 flex-1 rounded border border-pink/50 px-2 py-1 text-ink"
+              value={renameDraft}
+              onChange={(e) => setRenameDraft(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitRename();
+                else if (e.key === "Escape") setIsRenaming(false);
+              }}
+            />
+          ) : (
+            <>
+              <button
+                className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+                onClick={() => {
+                  setRenameDraft(currentProject.name);
+                  setIsRenaming(true);
+                }}
+              >
+                名前を変更
+              </button>
+              <button
+                className="rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm(`「${currentProject.name}」を削除します。よろしいですか？`)) deleteProject(currentProject.id);
+                }}
+              >
+                削除
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-1.5 text-xs">
         <button
@@ -88,71 +145,6 @@ export function ProjectPanel() {
           >
             保存
           </button>
-        </div>
-      )}
-
-      {(currentProject ? others.length : projects.length) > 0 && (
-        <div className="flex flex-col gap-1">
-          <button
-            className="self-start text-[11px] text-ink/40 hover:text-pink"
-            onClick={() => setShowList((v) => !v)}
-          >
-            {showList ? "▾" : "▸"} 他の作品を開く（{currentProject ? others.length : projects.length}）
-          </button>
-          {showList && (
-            <ul className="flex max-h-40 flex-col gap-0.5 overflow-auto">
-              {(currentProject ? others : projects).map((p) => (
-                <li
-                  key={p.id}
-                  className={`flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-cream/60 ${
-                    p.id === currentProjectId ? "bg-peach/25" : ""
-                  }`}
-                >
-                  {editingId === p.id ? (
-                    <input
-                      autoFocus
-                      className="min-w-0 flex-1 rounded border border-pink/50 px-1 py-0.5"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={() => {
-                        if (editingName.trim()) renameProject(p.id, editingName.trim());
-                        setEditingId(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          if (editingName.trim()) renameProject(p.id, editingName.trim());
-                          setEditingId(null);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <button
-                      className="min-w-0 flex-1 truncate text-left"
-                      title="クリックして開く・ダブルクリックで名前変更"
-                      onClick={() => loadProject(p.id)}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        setEditingId(p.id);
-                        setEditingName(p.name);
-                      }}
-                    >
-                      {p.name}
-                    </button>
-                  )}
-                  <span className="shrink-0 text-ink/30">{formatDate(p.updatedAt)}</span>
-                  <button
-                    className="shrink-0 text-ink/30 hover:text-red-500"
-                    title="削除"
-                    onClick={() => {
-                      if (confirm(`「${p.name}」を削除します。よろしいですか？`)) deleteProject(p.id);
-                    }}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
     </div>
