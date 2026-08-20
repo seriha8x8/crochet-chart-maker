@@ -21,6 +21,7 @@ export function PropertiesPanel() {
   const toggleParent = useChartStore((s) => s.toggleParent);
   const groupSelection = useChartStore((s) => s.groupSelection);
   const ungroupSelection = useChartStore((s) => s.ungroupSelection);
+  const duplicateMirrored = useChartStore((s) => s.duplicateMirrored);
 
   if (parentLinkTargetId) {
     const target = symbols.find((s) => s.id === parentLinkTargetId);
@@ -119,6 +120,26 @@ export function PropertiesPanel() {
             グループ化
           </button>
         )}
+
+        <div className="flex flex-col gap-1.5 rounded-md border border-peach/50 p-2">
+          <span className="text-xs font-semibold text-ink/50">複製して反転</span>
+          <p className="text-[11px] text-ink/40">半分作ったら反転して複製し、隣に自動で並べます。位置は後から調整できます。</p>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
+              onClick={() => duplicateMirrored(selectedIds, "horizontal")}
+            >
+              左右反転複製
+            </button>
+            <button
+              className="flex-1 rounded-md border border-peach/60 px-2 py-1.5 text-sm text-ink hover:bg-cream/60"
+              onClick={() => duplicateMirrored(selectedIds, "vertical")}
+            >
+              上下反転複製
+            </button>
+          </div>
+        </div>
+
         <button
           className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
           onClick={() => deleteSymbols(selectedIds)}

@@ -49,6 +49,7 @@ interface ChartState {
   deleteSymbols: (ids: string[]) => void;
   rotateSymbols: (ids: string[], deltaDeg: number) => void;
   orbitGroup: (ids: string[], deltaDeg: number, pivot: Point) => void;
+  duplicateMirrored: (ids: string[], axis: "horizontal" | "vertical") => void;
   setRotation: (id: string, deg: number) => void;
 
   selectOnly: (id: string) => void;
@@ -224,6 +225,51 @@ export const useChartStore = create<ChartState>()(
             };
           }),
         });
+      },
+
+      // Mirrors the selection across the edge of its own bounding box (right edge for
+      // a horizontal flip, bottom edge for vertical) and adds the result as a new,
+      // separately draggable group — build one half of a symmetric motif, mirror it,
+      // and the other half appears already lined up (drag it if the seam side is
+      // backwards). Each symbol's own rotation is reflected too, not just its position.
+      duplicateMirrored: (ids, axis) => {
+        const { symbols, activeLayerId } = get();
+        const selected = symbols.filter((s) => ids.includes(s.id));
+        if (selected.length === 0) return;
+
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const s of selected) {
+          for (const p of [getFootPoint(s), getHeadPoint(s)]) {
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+          }
+        }
+
+        get().pushHistory();
+        const groupId = selected.length > 1 ? uuid() : null;
+        const mirrored: ChartSymbol[] = selected.map((s) =>
+          axis === "horizontal"
+            ? {
+                ...s,
+                id: uuid(),
+                x: 2 * maxX - s.x,
+                rotation: (360 - s.rotation) % 360,
+                layerId: activeLayerId,
+                parentIds: [],
+                groupId,
+              }
+            : {
+                ...s,
+                id: uuid(),
+                y: 2 * maxY - s.y,
+                rotation: (180 - s.rotation + 360) % 360,
+                layerId: activeLayerId,
+                parentIds: [],
+                groupId,
+              },
+        );
+        set({ symbols: [...symbols, ...mirrored], selectedIds: mirrored.map((s) => s.id) });
       },
 
       setRotation: (id, deg) =>
