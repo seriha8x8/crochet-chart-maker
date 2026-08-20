@@ -18,6 +18,7 @@ export interface ChartSymbol {
   layerId: string;
   parentIds: string[];
   attachType: AttachType;
+  groupId: string | null;
 }
 
 export interface Layer {

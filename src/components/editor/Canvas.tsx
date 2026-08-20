@@ -55,8 +55,6 @@ export function Canvas() {
 
   const placeSymbolAt = useChartStore((s) => s.placeSymbolAt);
   const addSymbolsBatch = useChartStore((s) => s.addSymbolsBatch);
-  const selectOnly = useChartStore((s) => s.selectOnly);
-  const toggleSelect = useChartStore((s) => s.toggleSelect);
   const setSelection = useChartStore((s) => s.setSelection);
   const clearSelection = useChartStore((s) => s.clearSelection);
   const setRotation = useChartStore((s) => s.setRotation);
@@ -163,16 +161,22 @@ export function Canvas() {
 
       // Clicking an existing symbol always selects it, even while a placement
       // tool is still armed, so a symbol can be picked up right after placing it.
+      // Clicking any member of a group selects the whole group.
+      const groupMemberIds = symbol.groupId
+        ? symbols.filter((s) => s.groupId === symbol.groupId).map((s) => s.id)
+        : [symbol.id];
       const world = screenToWorld(e.clientX, e.clientY);
       let nextSelection = selectedIds;
       if (e.shiftKey) {
-        toggleSelect(symbol.id);
-        nextSelection = selectedIds.includes(symbol.id)
-          ? selectedIds.filter((id) => id !== symbol.id)
-          : [...selectedIds, symbol.id];
-      } else if (!selectedIds.includes(symbol.id)) {
-        selectOnly(symbol.id);
-        nextSelection = [symbol.id];
+        const allIn = groupMemberIds.every((id) => selectedIds.includes(id));
+        nextSelection = allIn
+          ? selectedIds.filter((id) => !groupMemberIds.includes(id))
+          : Array.from(new Set([...selectedIds, ...groupMemberIds]));
+        setSelection(nextSelection);
+      } else if (!groupMemberIds.some((id) => selectedIds.includes(id))) {
+        // Nothing from this symbol's group is currently selected: select just the group.
+        nextSelection = groupMemberIds;
+        setSelection(nextSelection);
       }
       setClickCandidate(symbol.id);
 
@@ -183,7 +187,7 @@ export function Canvas() {
       }
       setDrag({ kind: "moveSelection", startWorld: world, startPositions, moved: false });
     },
-    [parentLinkTargetId, selectedIds, selectOnly, toggleSelect, symbolById, toggleParent, screenToWorld],
+    [parentLinkTargetId, selectedIds, setSelection, symbols, symbolById, toggleParent, screenToWorld],
   );
 
   const onRotateHandlePointerDown = useCallback(
@@ -310,8 +314,24 @@ export function Canvas() {
           const y2 = Math.max(drag.startScreen.y, drag.currentScreen.y);
           const w1 = screenToWorld(x1, y1);
           const w2 = screenToWorld(x2, y2);
+          // Select anything the marquee overlaps at all (its drawn glyph, not just its
+          // origin point), matching how drag-select works in most design tools.
+          const caught = visibleSymbols.filter((s) => {
+            const def = SYMBOL_DEFS[s.type];
+            const pad = def.width / 2;
+            const foot = getFootPoint(s);
+            const head = getHeadPoint(s);
+            const minX = Math.min(foot.x, head.x) - pad;
+            const maxX = Math.max(foot.x, head.x) + pad;
+            const minY = Math.min(foot.y, head.y) - pad;
+            const maxY = Math.max(foot.y, head.y) + pad;
+            return !(maxX < w1.x || minX > w2.x || maxY < w1.y || minY > w2.y);
+          });
+          const caughtIds = new Set(caught.map((s) => s.id));
+          // Catching one member of a group pulls in the whole group.
+          const caughtGroupIds = new Set(caught.filter((s) => s.groupId).map((s) => s.groupId));
           const inRect = visibleSymbols
-            .filter((s) => s.x >= w1.x && s.x <= w2.x && s.y >= w1.y && s.y <= w2.y)
+            .filter((s) => caughtIds.has(s.id) || (s.groupId && caughtGroupIds.has(s.groupId)))
             .map((s) => s.id);
           if (inRect.length > 0) {
             if (drag.additive) {
@@ -355,6 +375,28 @@ export function Canvas() {
 
   const selectedSymbol =
     selectedIds.length === 1 ? symbolById.get(selectedIds[0]) : undefined;
+
+  const selectedGroupBBox = useMemo(() => {
+    if (selectedIds.length < 2) return null;
+    const selected = selectedIds.map((id) => symbolById.get(id)).filter((s): s is ChartSymbol => !!s);
+    if (selected.length === 0) return null;
+    const groupId = selected[0].groupId;
+    if (!groupId || !selected.every((s) => s.groupId === groupId)) return null;
+    const pad = 14;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const s of selected) {
+      for (const p of [getFootPoint(s), getHeadPoint(s)]) {
+        minX = Math.min(minX, p.x - pad);
+        minY = Math.min(minY, p.y - pad);
+        maxX = Math.max(maxX, p.x + pad);
+        maxY = Math.max(maxY, p.y + pad);
+      }
+    }
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  }, [selectedIds, symbolById]);
 
   // startScreen/currentScreen are viewport-relative (clientX/Y); the overlay div is
   // absolutely positioned inside the canvas container, so offset by the container's
@@ -440,6 +482,22 @@ export function Canvas() {
 
           {selectedSymbol && !parentLinkTargetId && (
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
+          )}
+
+          {selectedGroupBBox && (
+            <rect
+              x={selectedGroupBBox.x}
+              y={selectedGroupBBox.y}
+              width={selectedGroupBBox.w}
+              height={selectedGroupBBox.h}
+              rx={6}
+              fill="none"
+              stroke="#f57799"
+              strokeWidth={1}
+              strokeDasharray="5 4"
+              opacity={0.5}
+              pointerEvents="none"
+            />
           )}
 
           {placementTool && activePlacementPreview && !placeLinePoints && (

@@ -16,6 +16,8 @@ export function PropertiesPanel() {
   const rotateSymbols = useChartStore((s) => s.rotateSymbols);
   const deleteSymbols = useChartStore((s) => s.deleteSymbols);
   const toggleParent = useChartStore((s) => s.toggleParent);
+  const groupSelection = useChartStore((s) => s.groupSelection);
+  const ungroupSelection = useChartStore((s) => s.ungroupSelection);
 
   if (parentLinkTargetId) {
     const target = symbols.find((s) => s.id === parentLinkTargetId);
@@ -71,6 +73,11 @@ export function PropertiesPanel() {
   }
 
   if (selectedIds.length > 1) {
+    const selected = symbols.filter((s) => selectedIds.includes(s.id));
+    const isOneGroup =
+      selected.length > 0 &&
+      !!selected[0].groupId &&
+      selected.every((s) => s.groupId === selected[0].groupId);
     return (
       <div className="flex flex-col gap-3 p-3">
         <h2 className="text-xs font-semibold text-ink/50">{selectedIds.length}個選択中</h2>
@@ -88,6 +95,21 @@ export function PropertiesPanel() {
             ⟳ 15°
           </button>
         </div>
+        {isOneGroup ? (
+          <button
+            className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
+            onClick={ungroupSelection}
+          >
+            グループ解除
+          </button>
+        ) : (
+          <button
+            className="rounded-md border border-peach/60 px-3 py-1.5 text-sm text-ink hover:bg-cream/60"
+            onClick={groupSelection}
+          >
+            グループ化
+          </button>
+        )}
         <button
           className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
           onClick={() => deleteSymbols(selectedIds)}

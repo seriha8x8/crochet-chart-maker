@@ -55,6 +55,9 @@ interface ChartState {
   setSelection: (ids: string[]) => void;
   clearSelection: () => void;
 
+  groupSelection: () => void;
+  ungroupSelection: () => void;
+
   addLayer: (name: string) => void;
   renameLayer: (id: string, name: string) => void;
   toggleLayerVisibility: (id: string) => void;
@@ -160,6 +163,7 @@ export const useChartStore = create<ChartState>()(
           layerId: activeLayerId,
           parentIds: [],
           attachType: "stitch",
+          groupId: null,
         };
         set({ symbols: [...symbols, newSymbol], selectedIds: [newSymbol.id] });
       },
@@ -214,6 +218,28 @@ export const useChartStore = create<ChartState>()(
       setSelection: (ids) => set({ selectedIds: ids }),
       clearSelection: () => set({ selectedIds: [], highlightIds: [] }),
 
+      groupSelection: () => {
+        const { selectedIds } = get();
+        if (selectedIds.length < 2) return;
+        get().pushHistory();
+        const groupId = uuid();
+        const idSet = new Set(selectedIds);
+        set({
+          symbols: get().symbols.map((s) => (idSet.has(s.id) ? { ...s, groupId } : s)),
+        });
+      },
+      ungroupSelection: () => {
+        const { selectedIds, symbols } = get();
+        const groupIds = new Set(
+          symbols.filter((s) => selectedIds.includes(s.id) && s.groupId).map((s) => s.groupId),
+        );
+        if (groupIds.size === 0) return;
+        get().pushHistory();
+        set({
+          symbols: get().symbols.map((s) => (s.groupId && groupIds.has(s.groupId) ? { ...s, groupId: null } : s)),
+        });
+      },
+
       addLayer: (name) => {
         get().pushHistory();
         const layers = get().layers;
@@ -253,15 +279,24 @@ export const useChartStore = create<ChartState>()(
         get().pushHistory();
         const idMap = new Map<string, string>();
         clipboard.forEach((s) => idMap.set(s.id, uuid()));
+        const groupIdMap = new Map<string, string>();
         const offset = 24;
-        const pasted: ChartSymbol[] = clipboard.map((s) => ({
-          ...s,
-          id: idMap.get(s.id)!,
-          x: s.x + offset,
-          y: s.y + offset,
-          layerId: activeLayerId,
-          parentIds: s.parentIds.filter((p) => idMap.has(p)).map((p) => idMap.get(p)!),
-        }));
+        const pasted: ChartSymbol[] = clipboard.map((s) => {
+          let newGroupId: string | null = null;
+          if (s.groupId) {
+            if (!groupIdMap.has(s.groupId)) groupIdMap.set(s.groupId, uuid());
+            newGroupId = groupIdMap.get(s.groupId)!;
+          }
+          return {
+            ...s,
+            id: idMap.get(s.id)!,
+            x: s.x + offset,
+            y: s.y + offset,
+            layerId: activeLayerId,
+            parentIds: s.parentIds.filter((p) => idMap.has(p)).map((p) => idMap.get(p)!),
+            groupId: newGroupId,
+          };
+        });
         set({ symbols: [...symbols, ...pasted], selectedIds: pasted.map((s) => s.id) });
       },
 
@@ -270,6 +305,10 @@ export const useChartStore = create<ChartState>()(
       addSymbolsBatch: (items) => {
         get().pushHistory();
         const { activeLayerId, symbols } = get();
+        // Batch placements (round array, straight fill, drag-to-fill) are grouped
+        // automatically, since they're conceptually one placement the user will likely
+        // want to reselect, move, or (eventually) rotate together as a unit.
+        const groupId = items.length > 1 ? uuid() : null;
         const created: ChartSymbol[] = items.map((item) => ({
           id: uuid(),
           type: item.type,
@@ -279,6 +318,7 @@ export const useChartStore = create<ChartState>()(
           layerId: activeLayerId,
           parentIds: [],
           attachType: "stitch",
+          groupId,
         }));
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },

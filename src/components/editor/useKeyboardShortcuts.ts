@@ -28,6 +28,10 @@ export function useKeyboardShortcuts() {
       } else if (mod && e.key.toLowerCase() === "v") {
         e.preventDefault();
         store.pasteClipboard();
+      } else if (mod && e.key.toLowerCase() === "g") {
+        e.preventDefault();
+        if (e.shiftKey) store.ungroupSelection();
+        else store.groupSelection();
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (store.selectedIds.length > 0) {
           e.preventDefault();
