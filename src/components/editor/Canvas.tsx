@@ -191,6 +191,22 @@ export function Canvas() {
     [parentLinkTargetId, selectedIds, setSelection, symbols, symbolById, toggleParent, screenToWorld],
   );
 
+  // Lets a group be picked up by clicking anywhere inside its dashed bounding box,
+  // not just directly on one of its members.
+  const onGroupBBoxPointerDown = useCallback(
+    (e: React.PointerEvent, ids: string[]) => {
+      e.stopPropagation();
+      const world = screenToWorld(e.clientX, e.clientY);
+      const startPositions = new Map<string, { x: number; y: number }>();
+      for (const id of ids) {
+        const s = symbolById.get(id);
+        if (s) startPositions.set(id, { x: s.x, y: s.y });
+      }
+      setDrag({ kind: "moveSelection", startWorld: world, startPositions, moved: false });
+    },
+    [symbolById, screenToWorld],
+  );
+
   const onRotateHandlePointerDown = useCallback(
     (e: React.PointerEvent, symbol: ChartSymbol) => {
       e.stopPropagation();
@@ -455,6 +471,23 @@ export function Canvas() {
         <g transform={`translate(${viewport.panX},${viewport.panY}) scale(${viewport.zoom})`}>
           <GuideLayer guide={guide} />
 
+          {multiSelectInfo && multiSelectInfo.isGroup && !parentLinkTargetId && (
+            <rect
+              x={multiSelectInfo.bbox.x}
+              y={multiSelectInfo.bbox.y}
+              width={multiSelectInfo.bbox.w}
+              height={multiSelectInfo.bbox.h}
+              rx={6}
+              fill="transparent"
+              stroke="#f57799"
+              strokeWidth={1}
+              strokeDasharray="5 4"
+              opacity={0.5}
+              style={{ cursor: "grab" }}
+              onPointerDown={(e) => onGroupBBoxPointerDown(e, selectedIds)}
+            />
+          )}
+
           {visibleSymbols.map((symbol) => {
             const isSelected = selectedIds.includes(symbol.id);
             const isHighlighted = highlightIds.includes(symbol.id);
@@ -503,22 +536,6 @@ export function Canvas() {
 
           {selectedSymbol && !parentLinkTargetId && (
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
-          )}
-
-          {multiSelectInfo && multiSelectInfo.isGroup && (
-            <rect
-              x={multiSelectInfo.bbox.x}
-              y={multiSelectInfo.bbox.y}
-              width={multiSelectInfo.bbox.w}
-              height={multiSelectInfo.bbox.h}
-              rx={6}
-              fill="none"
-              stroke="#f57799"
-              strokeWidth={1}
-              strokeDasharray="5 4"
-              opacity={0.5}
-              pointerEvents="none"
-            />
           )}
 
           {multiSelectInfo && !parentLinkTargetId && (
