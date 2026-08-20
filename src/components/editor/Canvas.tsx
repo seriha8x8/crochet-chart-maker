@@ -369,7 +369,11 @@ export function Canvas() {
             const isLinkedParent =
               parentLinkTargetId && symbolById.get(parentLinkTargetId)?.parentIds.includes(symbol.id);
             const def = SYMBOL_DEFS[symbol.type];
-            const hitR = Math.max(def.width, def.height, 16) / 2 + 7;
+            const visualR = Math.max(def.width, def.height, 16) / 2 + 7;
+            // While a placement tool is armed, shrink the clickable area down to roughly the
+            // glyph itself. Otherwise the generous hit padding of a symbol in the row below
+            // swallows clicks meant to place a new symbol just above it (rows sit close together).
+            const hitR = placementTool ? Math.max(def.width, def.height) / 2 + 1 : visualR;
             const strokeColor = isLinkTarget
               ? "#7c3aed"
               : isLinkedParent
@@ -391,7 +395,7 @@ export function Canvas() {
                   <circle
                     cx={0}
                     cy={-def.height / 2}
-                    r={hitR - 2}
+                    r={visualR - 2}
                     fill="none"
                     stroke={strokeColor}
                     strokeWidth={1.5}
