@@ -35,6 +35,27 @@ cp .env.example .env.local
 
 未設定の場合は自動的にlocalStorageのみで動作します。
 
+## デプロイ（Cloudflare Pages）
+
+サーバー機能（APIルート・サーバーアクション・middleware）を使わないクライアント完結型アプリのため、`next.config.ts` で静的書き出し（`output: "export"`）を行い、生成された `out/` ディレクトリをそのまま配信します。
+
+Cloudflare Pages のプロジェクト設定：
+
+| 項目 | 値 |
+| --- | --- |
+| ビルドコマンド | `npm run build` |
+| ビルド出力ディレクトリ | `out` |
+| ルートディレクトリ | `/`（リポジトリ直下） |
+
+Supabase連携を使う場合は、Cloudflare Pages の環境変数に `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定してください（ビルド時に埋め込まれるため、Production/Preview両方に設定が必要です）。未設定でもlocalStorageのみで動作します。
+
+ローカルで書き出し結果を確認する場合：
+
+```bash
+npm run build
+npx serve out
+```
+
 ## 技術構成
 
 Next.js (App Router) / React / TypeScript / Tailwind CSS / Zustand / Supabase（任意）
