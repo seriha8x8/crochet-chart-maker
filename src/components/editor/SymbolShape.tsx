@@ -29,7 +29,7 @@ export function SymbolShape({ type, stroke = "#2a211d", strokeWidth = 1.6 }: Sym
     }
     case "chain": {
       const cy = -height / 2;
-      return <ellipse cx={0} cy={cy} rx={5.5} ry={7.5} {...common} />;
+      return <ellipse cx={0} cy={cy} rx={7.5} ry={5} {...common} />;
     }
     case "slipStitch": {
       const cy = -height / 2;

@@ -22,7 +22,7 @@ type DragMode =
   | { kind: "none" }
   | { kind: "moveSelection"; startWorld: { x: number; y: number }; startPositions: Map<string, { x: number; y: number }>; moved: boolean }
   | { kind: "marquee"; startScreen: { x: number; y: number }; currentScreen: { x: number; y: number }; additive: boolean }
-  | { kind: "rotate"; symbolId: string; centerScreen: { x: number; y: number }; startAngle: number; startRotation: number }
+  | { kind: "rotate"; symbolId: string; centerScreen: { x: number; y: number } }
   | { kind: "pan"; startScreen: { x: number; y: number }; startPan: { x: number; y: number } };
 
 export function Canvas() {
@@ -186,8 +186,7 @@ export function Canvas() {
         x: rect.left + viewport.panX + symbol.x * viewport.zoom,
         y: rect.top + viewport.panY + symbol.y * viewport.zoom,
       };
-      const startAngle = (Math.atan2(e.clientY - centerScreen.y, e.clientX - centerScreen.x) * 180) / Math.PI;
-      setDrag({ kind: "rotate", symbolId: symbol.id, centerScreen, startAngle, startRotation: symbol.rotation });
+      setDrag({ kind: "rotate", symbolId: symbol.id, centerScreen });
     },
     [viewport],
   );
@@ -271,9 +270,11 @@ export function Canvas() {
       } else if (drag.kind === "marquee") {
         setDrag({ ...drag, currentScreen: { x: e.clientX, y: e.clientY } });
       } else if (drag.kind === "rotate") {
-        const angle = (Math.atan2(e.clientY - drag.centerScreen.y, e.clientX - drag.centerScreen.x) * 180) / Math.PI;
-        const delta = angle - drag.startAngle;
-        setRotation(drag.symbolId, drag.startRotation + 90 + delta);
+        // The handle always points from the pivot toward the cursor, so the symbol's
+        // rotation can be read directly off the cursor's angle around centerScreen
+        // (converted from atan2's "0=right" convention to ours, "0=up").
+        const pointerAngle = (Math.atan2(e.clientY - drag.centerScreen.y, e.clientX - drag.centerScreen.x) * 180) / Math.PI;
+        setRotation(drag.symbolId, pointerAngle + 90);
       } else if (drag.kind === "pan") {
         const dx = e.clientX - drag.startScreen.x;
         const dy = e.clientY - drag.startScreen.y;
