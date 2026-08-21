@@ -205,17 +205,14 @@ export function SymbolShape({
 
   if (!hookMark) return shape;
 
+  // A loop curling out from the foot, like the base of a real front/back-post stitch
+  // symbol (hooked around the previous round's post rather than piercing its head).
   const dir = hookMark === "front" ? -1 : 1;
+  const r = 4.5;
   return (
     <>
       {shape}
-      <path
-        d={`M 0,0 Q ${dir * 7},-4 0,-8`}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
+      <circle cx={dir * r} cy={0} r={r} fill="none" stroke={stroke} strokeWidth={strokeWidth} />
     </>
   );
 }
