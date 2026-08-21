@@ -125,6 +125,12 @@ function snapSymbolToParents(symbol: ChartSymbol, allSymbols: ChartSymbol[]): Ch
   const parents = allSymbols.filter((s) => symbol.parentIds.includes(s.id));
   if (parents.length === 0) return symbol;
 
+  if (symbol.attachType === "pullUpFront" || symbol.attachType === "pullUpBack") {
+    // Hooked into the middle of the parent's post, not its foot or head.
+    const feet = centroid(parents.map((p) => getFootPoint(p)));
+    const heads = centroid(parents.map((p) => getHeadPoint(p)));
+    return { ...symbol, x: (feet.x + heads.x) / 2, y: (feet.y + heads.y) / 2 };
+  }
   if (symbol.attachType === "stitch") {
     const target = centroid(parents.map((p) => getHeadPoint(p)));
     return { ...symbol, x: target.x, y: target.y };

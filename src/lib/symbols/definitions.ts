@@ -20,7 +20,13 @@ export const SYMBOL_ORDER: SymbolType[] = [
   "halfDouble",
   "double",
   "triple",
+  "picot",
+  "bobble",
+  "puff",
 ];
+
+/** Stitch types whose leg count / foot position can change with connection count (増減目). */
+export const LEG_VARIABLE_TYPES: SymbolType[] = ["singleCrochet", "halfDouble", "double", "triple"];
 
 export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
   ring: {
@@ -71,5 +77,26 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     shortLabel: "長々",
     height: 32,
     width: 12,
+  },
+  picot: {
+    type: "picot",
+    label: "ピコット",
+    shortLabel: "ピコ",
+    height: 14,
+    width: 14,
+  },
+  bobble: {
+    type: "bobble",
+    label: "玉編み",
+    shortLabel: "玉",
+    height: 18,
+    width: 16,
+  },
+  puff: {
+    type: "puff",
+    label: "パフコーン編み",
+    shortLabel: "パフ",
+    height: 20,
+    width: 20,
   },
 };

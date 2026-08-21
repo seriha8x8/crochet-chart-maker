@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
-import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
+import { getFootPoint, getHeadPoint, centroid, computeConnectionOffsets, type Point } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
 import { computeFillBetween } from "@/lib/symbols/straightArray";
 import type { ChartSymbol } from "@/types/chart";
@@ -515,6 +515,7 @@ export function Canvas() {
               : isSelected
               ? "#f57799"
               : symbol.color ?? DEFAULT_SYMBOL_COLOR;
+            const connectionOffsets = computeConnectionOffsets(symbol, symbols);
             return (
               <g
                 key={symbol.id}
@@ -535,7 +536,15 @@ export function Canvas() {
                     opacity={0.6}
                   />
                 )}
-                <SymbolShape type={symbol.type} stroke={strokeColor} />
+                <SymbolShape
+                  type={symbol.type}
+                  stroke={strokeColor}
+                  feetOffsets={connectionOffsets.feet}
+                  headOffset={connectionOffsets.headOffset}
+                  hookMark={
+                    symbol.attachType === "pullUpFront" ? "front" : symbol.attachType === "pullUpBack" ? "back" : undefined
+                  }
+                />
               </g>
             );
           })}

@@ -2,7 +2,7 @@ import { forwardRef, useMemo } from "react";
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
-import { getFootPoint, getHeadPoint } from "@/lib/symbols/geometry";
+import { getFootPoint, getHeadPoint, computeConnectionOffsets } from "@/lib/symbols/geometry";
 
 const PADDING = 30;
 
@@ -47,11 +47,22 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
     >
       <rect x={0} y={0} width={width} height={height} fill="#ffffff" />
       <g transform={`translate(${offsetX},${offsetY})`}>
-        {visibleSymbols.map((symbol) => (
-          <g key={symbol.id} transform={`translate(${symbol.x},${symbol.y}) rotate(${symbol.rotation})`}>
-            <SymbolShape type={symbol.type} stroke={symbol.color ?? DEFAULT_SYMBOL_COLOR} />
-          </g>
-        ))}
+        {visibleSymbols.map((symbol) => {
+          const connectionOffsets = computeConnectionOffsets(symbol, symbols);
+          return (
+            <g key={symbol.id} transform={`translate(${symbol.x},${symbol.y}) rotate(${symbol.rotation})`}>
+              <SymbolShape
+                type={symbol.type}
+                stroke={symbol.color ?? DEFAULT_SYMBOL_COLOR}
+                feetOffsets={connectionOffsets.feet}
+                headOffset={connectionOffsets.headOffset}
+                hookMark={
+                  symbol.attachType === "pullUpFront" ? "front" : symbol.attachType === "pullUpBack" ? "back" : undefined
+                }
+              />
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

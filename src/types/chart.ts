@@ -5,9 +5,17 @@ export type SymbolType =
   | "halfDouble"
   | "double"
   | "triple"
-  | "ring";
+  | "ring"
+  | "picot"
+  | "bobble"
+  | "puff";
 
-export type AttachType = "stitch" | "space";
+/**
+ * - stitch: head-to-head, in the top of the parent stitch (目に編む)
+ * - space: foot centered between parents' feet, in the gap (束に編む)
+ * - pullUpFront/pullUpBack: hooked into the middle of the parent's post (引き上げる・表/裏)
+ */
+export type AttachType = "stitch" | "space" | "pullUpFront" | "pullUpBack";
 
 export interface ChartSymbol {
   id: string;
