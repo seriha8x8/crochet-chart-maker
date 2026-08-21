@@ -170,6 +170,16 @@ export function SymbolShape({
       );
       break;
     }
+    case "yarnJoin": {
+      const tw = SYMBOL_DEFS[type].width / 2;
+      shape = <path d={`M ${-tw},${-height} L ${tw},${-height} L 0,0 Z`} {...common} />;
+      break;
+    }
+    case "yarnCut": {
+      const tw = SYMBOL_DEFS[type].width / 2;
+      shape = <path d={`M ${-tw},${-height} L ${tw},${-height} L 0,0 Z`} fill={stroke} stroke="none" />;
+      break;
+    }
     default:
       shape = null;
   }

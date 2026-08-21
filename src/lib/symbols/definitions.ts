@@ -23,6 +23,8 @@ export const SYMBOL_ORDER: SymbolType[] = [
   "picot",
   "bobble",
   "puff",
+  "yarnJoin",
+  "yarnCut",
 ];
 
 /** Stitch types whose leg count / foot position can change with connection count (増減目). */
@@ -98,5 +100,19 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     shortLabel: "パフ",
     height: 20,
     width: 20,
+  },
+  yarnJoin: {
+    type: "yarnJoin",
+    label: "糸を付ける",
+    shortLabel: "付",
+    height: 16,
+    width: 14,
+  },
+  yarnCut: {
+    type: "yarnCut",
+    label: "糸を切る",
+    shortLabel: "切",
+    height: 16,
+    width: 14,
   },
 };

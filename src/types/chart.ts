@@ -8,7 +8,9 @@ export type SymbolType =
   | "ring"
   | "picot"
   | "bobble"
-  | "puff";
+  | "puff"
+  | "yarnJoin"
+  | "yarnCut";
 
 /**
  * - stitch: head-to-head, in the top of the parent stitch (目に編む)
