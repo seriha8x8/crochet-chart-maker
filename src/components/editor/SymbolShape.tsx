@@ -135,37 +135,56 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      const loopCy = -height + 4;
+      // 3 small loops (chain-3) fanning from the base, with the closing slip stitch as a dot.
+      const petalW = 3;
+      const petalLen = height;
+      const petalPath = `M 0,0 C ${-petalW},${-petalLen * 0.3} ${-petalW},${-petalLen * 0.75} 0,${-petalLen} C ${petalW},${-petalLen * 0.75} ${petalW},${-petalLen * 0.3} 0,0 Z`;
       shape = (
         <g {...common}>
-          <line x1={0} y1={0} x2={0} y2={loopCy} />
-          <circle cx={0} cy={loopCy - 4} r={4} />
+          <g transform="rotate(-32)">
+            <path d={petalPath} />
+          </g>
+          <path d={petalPath} />
+          <g transform="rotate(32)">
+            <path d={petalPath} />
+          </g>
+          <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
       );
       break;
     }
     case "bobble": {
-      const legTopY = -height * 0.35;
-      const bw = 5.5;
+      // Lens/almond outline (pointed at both foot and head) with a few loops inside.
+      const bw = SYMBOL_DEFS[type].width / 2;
+      const inset = 1.5;
+      const loopXs = [-bw * 0.55, 0, bw * 0.55];
       shape = (
-        <g>
-          <line x1={0} y1={0} x2={0} y2={legTopY} {...common} />
+        <g {...common}>
           <path
-            d={`M 0,${legTopY} Q ${-bw},${(legTopY - height) / 2} 0,${-height} Q ${bw},${(legTopY - height) / 2} 0,${legTopY} Z`}
-            fill={stroke}
-            stroke="none"
+            d={`M 0,0 C ${-bw},${-height * 0.15} ${-bw},${-height * 0.85} 0,${-height} C ${bw},${-height * 0.85} ${bw},${-height * 0.15} 0,0 Z`}
           />
+          {loopXs.map((lx) => (
+            <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + inset} />
+          ))}
         </g>
       );
       break;
     }
     case "puff": {
-      const r = 7;
-      const cy = -height + r;
+      // Open-top "vase" outline (flat rim at the head, pointed at the foot) with loops inside.
+      const bw = SYMBOL_DEFS[type].width / 2;
+      const rimRy = 3;
+      const inset = 1.5;
+      const loopXs = [-bw * 0.5, 0, bw * 0.5];
       shape = (
-        <g>
-          <line x1={0} y1={0} x2={0} y2={cy} {...common} />
-          <circle cx={0} cy={cy} r={r} fill="none" stroke={stroke} strokeWidth={strokeWidth * 1.8} />
+        <g {...common}>
+          <path
+            d={`M ${-bw},${-height} C ${-bw * 1.15},${-height * 0.5} ${-bw * 0.25},${-height * 0.05} 0,0 C ${bw * 0.25},${-height * 0.05} ${bw * 1.15},${-height * 0.5} ${bw},${-height}`}
+          />
+          <ellipse cx={0} cy={-height} rx={bw} ry={rimRy} />
+          {loopXs.map((lx) => (
+            <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + rimRy} />
+          ))}
         </g>
       );
       break;
