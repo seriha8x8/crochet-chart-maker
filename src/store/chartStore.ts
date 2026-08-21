@@ -82,6 +82,7 @@ interface ChartState {
   duplicateMirrored: (ids: string[], axis: "horizontal" | "vertical") => void;
   setRotation: (id: string, deg: number) => void;
   setSymbolColor: (ids: string[], color: string | null) => void;
+  setLoopCount: (id: string, count: number) => void;
 
   selectOnly: (id: string) => void;
   toggleSelect: (id: string) => void;
@@ -263,6 +264,7 @@ export const useChartStore = create<ChartState>()(
           attachType: "stitch",
           groupId: null,
           color: null,
+          loopCount: 3,
         };
         set({ symbols: [...symbols, newSymbol], selectedIds: [newSymbol.id] });
       },
@@ -384,6 +386,14 @@ export const useChartStore = create<ChartState>()(
         });
       },
 
+      setLoopCount: (id, count) => {
+        get().pushHistory();
+        const loopCount = Math.max(1, Math.round(count));
+        set({
+          symbols: get().symbols.map((s) => (s.id === id ? { ...s, loopCount } : s)),
+        });
+      },
+
       selectOnly: (id) => set({ selectedIds: [id] }),
       toggleSelect: (id) =>
         set((state) => ({
@@ -497,6 +507,7 @@ export const useChartStore = create<ChartState>()(
           attachType: "stitch",
           groupId,
           color: null,
+          loopCount: 3,
         }));
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },

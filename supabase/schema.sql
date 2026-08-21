@@ -31,11 +31,13 @@ create table if not exists chart_symbols (
   layer_id uuid not null references chart_layers (id) on delete cascade,
   parent_ids uuid[] not null default '{}',
   attach_type text not null default 'stitch',
-  color text
+  color text,
+  loop_count integer not null default 3
 );
 
--- Migration for tables created before the color column existed.
+-- Migrations for tables created before these columns existed.
 alter table chart_symbols add column if not exists color text;
+alter table chart_symbols add column if not exists loop_count integer not null default 3;
 
 create index if not exists chart_layers_user_id_idx on chart_layers (user_id);
 create index if not exists chart_symbols_user_id_idx on chart_symbols (user_id);

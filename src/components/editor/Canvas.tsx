@@ -544,6 +544,7 @@ export function Canvas() {
                   hookMark={
                     symbol.attachType === "pullUpFront" ? "front" : symbol.attachType === "pullUpBack" ? "back" : undefined
                   }
+                  loopCount={symbol.loopCount}
                 />
               </g>
             );

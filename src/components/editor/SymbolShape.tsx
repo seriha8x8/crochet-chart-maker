@@ -7,10 +7,10 @@ interface SymbolShapeProps {
   stroke?: string;
   strokeWidth?: number;
   /**
-   * Local x-offsets (y=0) to draw this symbol's leg(s) from instead of the default
-   * single centered leg — see computeConnectionOffsets in lib/symbols/geometry.ts for
-   * how this represents a decrease (multiple legs into one head). Defaults to a single
-   * centered leg, i.e. unchanged.
+   * Local x-offsets (y=0, or -HOOK_R when hookMark is set) to draw this symbol's leg(s)
+   * from instead of the default single centered leg — see computeConnectionOffsets in
+   * lib/symbols/geometry.ts for how this represents a decrease (multiple legs into one
+   * head). Defaults to a single centered leg, i.e. unchanged.
    */
   feetOffsets?: number[];
   /**
@@ -18,9 +18,13 @@ interface SymbolShapeProps {
    * increase — see computeConnectionOffsets. Defaults to 0, i.e. unchanged.
    */
   headOffset?: number;
-  /** Draws a small hook mark at the foot for a "引き上げる" (pull-up) connection. */
+  /** Draws the foot as a loop curling out for a "引き上げる" (pull-up) connection. */
   hookMark?: "front" | "back";
+  /** Number of loops/legs drawn inside a bobble or puff stitch. Defaults to 3. */
+  loopCount?: number;
 }
+
+const HOOK_R = 5;
 
 /**
  * Renders a symbol pointing "up": foot at (0,0), head at (0,-height).
@@ -33,10 +37,15 @@ export function SymbolShape({
   feetOffsets = [0],
   headOffset = 0,
   hookMark,
+  loopCount = 3,
 }: SymbolShapeProps) {
   const height = SYMBOL_DEFS[type].height;
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const feetChanged = feetOffsets.length > 1 || feetOffsets[0] !== 0 || headOffset !== 0;
+  // When hooking around a post, the leg stops short of the actual foot point (0,0) so a
+  // loop can be drawn entirely above it, tangent to both the leg and the y=0 baseline —
+  // otherwise half the loop would hang below the row it's meant to sit on.
+  const legFootY = hookMark ? -HOOK_R : 0;
 
   let shape: ReactNode;
 
@@ -70,7 +79,8 @@ export function SymbolShape({
         <g {...common}>
           <line x1={headOffset - s} y1={cy - s} x2={headOffset + s} y2={cy + s} />
           <line x1={headOffset + s} y1={cy - s} x2={headOffset - s} y2={cy + s} />
-          {feetChanged && feetOffsets.map((fx) => <line key={fx} x1={fx} y1={0} x2={headOffset} y2={cy} />)}
+          {(feetChanged || hookMark) &&
+            feetOffsets.map((fx) => <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={cy} />)}
         </g>
       );
       break;
@@ -80,7 +90,7 @@ export function SymbolShape({
       shape = (
         <g {...common}>
           {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={0} x2={headOffset} y2={-height} />
+            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
         </g>
@@ -94,7 +104,7 @@ export function SymbolShape({
       shape = (
         <g {...common}>
           {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={0} x2={headOffset} y2={-height} />
+            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
@@ -115,7 +125,7 @@ export function SymbolShape({
       shape = (
         <g {...common}>
           {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={0} x2={headOffset} y2={-height} />
+            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
@@ -154,10 +164,12 @@ export function SymbolShape({
       break;
     }
     case "bobble": {
-      // Lens/almond outline (pointed at both foot and head) with a few loops inside.
-      const bw = SYMBOL_DEFS[type].width / 2;
+      // Lens/almond outline (pointed at both foot and head) with one loop per stitch inside.
+      const n = Math.max(1, loopCount);
+      const bw = 4.5 + (n - 1) * 1.8;
+      const step = n > 1 ? (bw * 1.1) / (n - 1) : 0;
       const inset = 1.5;
-      const loopXs = [-bw * 0.55, 0, bw * 0.55];
+      const loopXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
       shape = (
         <g {...common}>
           <path
@@ -171,11 +183,13 @@ export function SymbolShape({
       break;
     }
     case "puff": {
-      // Open-top "vase" outline (flat rim at the head, pointed at the foot) with loops inside.
-      const bw = SYMBOL_DEFS[type].width / 2;
+      // Open-top "vase" outline (flat rim at the head, pointed at the foot) with one loop per stitch inside.
+      const n = Math.max(1, loopCount);
+      const bw = 5.5 + (n - 1) * 1.8;
+      const step = n > 1 ? (bw * 1.0) / (n - 1) : 0;
       const rimRy = 3;
       const inset = 1.5;
-      const loopXs = [-bw * 0.5, 0, bw * 0.5];
+      const loopXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
       shape = (
         <g {...common}>
           <path
@@ -207,12 +221,13 @@ export function SymbolShape({
 
   // A loop curling out from the foot, like the base of a real front/back-post stitch
   // symbol (hooked around the previous round's post rather than piercing its head).
+  // Sits entirely above y=0 — tangent to the (shortened) leg at its top and to the
+  // y=0 baseline at its bottom — so it reads as one continuous curl, not a separate mark.
   const dir = hookMark === "front" ? -1 : 1;
-  const r = 4.5;
   return (
     <>
       {shape}
-      <circle cx={dir * r} cy={0} r={r} fill="none" stroke={stroke} strokeWidth={strokeWidth} />
+      <circle cx={dir * HOOK_R} cy={-HOOK_R} r={HOOK_R} fill="none" stroke={stroke} strokeWidth={strokeWidth} />
     </>
   );
 }

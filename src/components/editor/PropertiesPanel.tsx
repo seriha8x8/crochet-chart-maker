@@ -15,6 +15,7 @@ export function PropertiesPanel() {
   const setAttachType = useChartStore((s) => s.setAttachType);
   const setRotation = useChartStore((s) => s.setRotation);
   const setSymbolColor = useChartStore((s) => s.setSymbolColor);
+  const setLoopCount = useChartStore((s) => s.setLoopCount);
   const rotateSymbols = useChartStore((s) => s.rotateSymbols);
   const orbitGroup = useChartStore((s) => s.orbitGroup);
   const pushHistory = useChartStore((s) => s.pushHistory);
@@ -175,6 +176,22 @@ export function PropertiesPanel() {
     <div className="flex flex-col gap-3 p-3">
       <h2 className="text-xs font-semibold text-ink/50">記号プロパティ</h2>
       <div className="text-sm font-medium text-ink">{def.label}</div>
+
+      {(symbol.type === "bobble" || symbol.type === "puff") && (
+        <label className="flex flex-col gap-1 text-xs text-ink/70">
+          目数
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              className="w-full rounded border border-peach/60 px-2 py-1 text-sm text-ink"
+              value={symbol.loopCount}
+              onChange={(e) => setLoopCount(symbol.id, Number(e.target.value) || 1)}
+            />
+            <span>目の{def.label}</span>
+          </div>
+        </label>
+      )}
 
       <label className="flex flex-col gap-1 text-xs text-ink/70">
         回転角度

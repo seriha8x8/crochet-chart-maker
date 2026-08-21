@@ -59,6 +59,7 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
                 hookMark={
                   symbol.attachType === "pullUpFront" ? "front" : symbol.attachType === "pullUpBack" ? "back" : undefined
                 }
+                loopCount={symbol.loopCount}
               />
             </g>
           );

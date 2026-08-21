@@ -31,6 +31,8 @@ export interface ChartSymbol {
   groupId: string | null;
   /** null = use the default ink color */
   color: string | null;
+  /** Loops per stitch, used by bobble/puff (玉編み・パプコーン編み・◯目). Unused by other types. */
+  loopCount: number;
 }
 
 export interface Layer {
