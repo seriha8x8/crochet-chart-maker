@@ -164,40 +164,63 @@ export function SymbolShape({
       break;
     }
     case "bobble": {
-      // Lens/almond outline (pointed at both foot and head) with one loop per stitch inside.
+      // Lens/almond outline (pointed at both foot and head): the outline's own 2 curves
+      // ARE the first 2 legs, with a straight interior line per stitch beyond that — so a
+      // 2-loop bobble is just the plain leaf shape, not the leaf plus 2 redundant sticks.
       const n = Math.max(2, loopCount);
-      const bw = 4.5 + (n - 1) * 1.8;
-      const step = n > 1 ? (bw * 1.1) / (n - 1) : 0;
+      const interiorCount = n - 2;
+      const bw = 4.5 + interiorCount * 1.6;
       const inset = 1.5;
-      const loopXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
+      const spread = bw * 1.6;
+      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
+      const interiorXs = legXs.slice(1, -1);
+      const markY = -height * 0.42;
+      const markSize = 2.4;
       shape = (
         <g {...common}>
           <path
             d={`M 0,0 C ${-bw},${-height * 0.15} ${-bw},${-height * 0.85} 0,${-height} C ${bw},${-height * 0.85} ${bw},${-height * 0.15} 0,0 Z`}
           />
-          {loopXs.map((lx) => (
+          {interiorXs.map((lx) => (
             <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + inset} />
+          ))}
+          {legXs.map((lx) => (
+            <g key={`m${lx}`}>
+              <line x1={lx - markSize} y1={markY - markSize} x2={lx + markSize} y2={markY + markSize} />
+              <line x1={lx - markSize} y1={markY + markSize} x2={lx + markSize} y2={markY - markSize} />
+            </g>
           ))}
         </g>
       );
       break;
     }
     case "puff": {
-      // Open-top "vase" outline (flat rim at the head, pointed at the foot) with one loop per stitch inside.
+      // Open-top "vase" outline (flat rim at the head, pointed at the foot): same logic as
+      // bobble — the outline's own 2 side curves are the first 2 legs.
       const n = Math.max(2, loopCount);
-      const bw = 5.5 + (n - 1) * 1.8;
-      const step = n > 1 ? (bw * 1.0) / (n - 1) : 0;
+      const interiorCount = n - 2;
+      const bw = 5.5 + interiorCount * 1.6;
       const rimRy = 3;
       const inset = 1.5;
-      const loopXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
+      const spread = bw * 1.5;
+      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
+      const interiorXs = legXs.slice(1, -1);
+      const markY = -height * 0.42;
+      const markSize = 2.4;
       shape = (
         <g {...common}>
           <path
             d={`M ${-bw},${-height} C ${-bw * 1.15},${-height * 0.5} ${-bw * 0.25},${-height * 0.05} 0,0 C ${bw * 0.25},${-height * 0.05} ${bw * 1.15},${-height * 0.5} ${bw},${-height}`}
           />
           <ellipse cx={0} cy={-height} rx={bw} ry={rimRy} />
-          {loopXs.map((lx) => (
+          {interiorXs.map((lx) => (
             <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + rimRy} />
+          ))}
+          {legXs.map((lx) => (
+            <g key={`m${lx}`}>
+              <line x1={lx - markSize} y1={markY - markSize} x2={lx + markSize} y2={markY + markSize} />
+              <line x1={lx - markSize} y1={markY + markSize} x2={lx + markSize} y2={markY - markSize} />
+            </g>
           ))}
         </g>
       );
@@ -227,7 +250,7 @@ export function SymbolShape({
   const dir = hookMark === "front" ? -1 : 1;
   const center = { x: dir * HOOK_R, y: -HOOK_R };
   const openingAngle = dir === -1 ? 90 : 270; // angle (0=up, clockwise+) facing the leg
-  const gap = 35; // degrees of open mouth, centered on openingAngle
+  const gap = 90; // degrees of open mouth (90 = a full semicircle), centered on openingAngle
   const angleToPoint = (deg: number) => {
     const rad = (deg * Math.PI) / 180;
     return { x: center.x + HOOK_R * Math.sin(rad), y: center.y - HOOK_R * Math.cos(rad) };
