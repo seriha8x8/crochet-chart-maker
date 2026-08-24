@@ -545,6 +545,7 @@ export function Canvas() {
                     symbol.attachType === "pullUpFront" ? "front" : symbol.attachType === "pullUpBack" ? "back" : undefined
                   }
                   loopCount={symbol.loopCount}
+                  baseStitch={symbol.baseStitch}
                 />
               </g>
             );

@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { v4 as uuid } from "uuid";
 import type {
   AttachType,
+  BobbleBaseStitch,
   CanvasBackground,
   ChartSymbol,
   GuideState,
@@ -83,6 +84,7 @@ interface ChartState {
   setRotation: (id: string, deg: number) => void;
   setSymbolColor: (ids: string[], color: string | null) => void;
   setLoopCount: (id: string, count: number) => void;
+  setBaseStitch: (id: string, baseStitch: BobbleBaseStitch) => void;
 
   selectOnly: (id: string) => void;
   toggleSelect: (id: string) => void;
@@ -265,6 +267,7 @@ export const useChartStore = create<ChartState>()(
           groupId: null,
           color: null,
           loopCount: 3,
+          baseStitch: "double",
         };
         set({ symbols: [...symbols, newSymbol], selectedIds: [newSymbol.id] });
       },
@@ -394,6 +397,13 @@ export const useChartStore = create<ChartState>()(
         });
       },
 
+      setBaseStitch: (id, baseStitch) => {
+        get().pushHistory();
+        set({
+          symbols: get().symbols.map((s) => (s.id === id ? { ...s, baseStitch } : s)),
+        });
+      },
+
       selectOnly: (id) => set({ selectedIds: [id] }),
       toggleSelect: (id) =>
         set((state) => ({
@@ -508,6 +518,7 @@ export const useChartStore = create<ChartState>()(
           groupId,
           color: null,
           loopCount: 3,
+          baseStitch: "double",
         }));
         set({ symbols: [...symbols, ...created], selectedIds: created.map((s) => s.id) });
       },

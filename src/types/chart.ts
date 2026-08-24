@@ -19,6 +19,9 @@ export type SymbolType =
  */
 export type AttachType = "stitch" | "space" | "pullUpFront" | "pullUpBack";
 
+/** The base stitch a bobble/puff's legs are decorated as (crossbar, +slashes). */
+export type BobbleBaseStitch = "halfDouble" | "double" | "triple";
+
 export interface ChartSymbol {
   id: string;
   type: SymbolType;
@@ -33,6 +36,8 @@ export interface ChartSymbol {
   color: string | null;
   /** Loops per stitch, used by bobble/puff (玉編み・パプコーン編み・◯目). Unused by other types. */
   loopCount: number;
+  /** Which stitch each of a bobble/puff's loops is decorated as. Unused by other types. */
+  baseStitch: BobbleBaseStitch;
 }
 
 export interface Layer {

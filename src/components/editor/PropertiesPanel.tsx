@@ -3,7 +3,13 @@
 import { useChartStore } from "@/store/chartStore";
 import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
 import { centroid, getFootPoint } from "@/lib/symbols/geometry";
-import type { AttachType } from "@/types/chart";
+import type { AttachType, BobbleBaseStitch } from "@/types/chart";
+
+const BASE_STITCH_OPTIONS: { value: BobbleBaseStitch; label: string }[] = [
+  { value: "halfDouble", label: "中長編み" },
+  { value: "double", label: "長編み" },
+  { value: "triple", label: "長々編み" },
+];
 
 export function PropertiesPanel() {
   const symbols = useChartStore((s) => s.symbols);
@@ -16,6 +22,7 @@ export function PropertiesPanel() {
   const setRotation = useChartStore((s) => s.setRotation);
   const setSymbolColor = useChartStore((s) => s.setSymbolColor);
   const setLoopCount = useChartStore((s) => s.setLoopCount);
+  const setBaseStitch = useChartStore((s) => s.setBaseStitch);
   const rotateSymbols = useChartStore((s) => s.rotateSymbols);
   const orbitGroup = useChartStore((s) => s.orbitGroup);
   const pushHistory = useChartStore((s) => s.pushHistory);
@@ -178,19 +185,35 @@ export function PropertiesPanel() {
       <div className="text-sm font-medium text-ink">{def.label}</div>
 
       {(symbol.type === "bobble" || symbol.type === "puff") && (
-        <label className="flex flex-col gap-1 text-xs text-ink/70">
-          目数
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={2}
+        <>
+          <label className="flex flex-col gap-1 text-xs text-ink/70">
+            目数
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={2}
+                className="w-full rounded border border-peach/60 px-2 py-1 text-sm text-ink"
+                value={symbol.loopCount ?? 3}
+                onChange={(e) => setLoopCount(symbol.id, Number(e.target.value) || 2)}
+              />
+              <span>目の{def.label}</span>
+            </div>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-ink/70">
+            土台の記号
+            <select
               className="w-full rounded border border-peach/60 px-2 py-1 text-sm text-ink"
-              value={symbol.loopCount ?? 3}
-              onChange={(e) => setLoopCount(symbol.id, Number(e.target.value) || 2)}
-            />
-            <span>目の{def.label}</span>
-          </div>
-        </label>
+              value={symbol.baseStitch ?? "double"}
+              onChange={(e) => setBaseStitch(symbol.id, e.target.value as BobbleBaseStitch)}
+            >
+              {BASE_STITCH_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </>
       )}
 
       <label className="flex flex-col gap-1 text-xs text-ink/70">

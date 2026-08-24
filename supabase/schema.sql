@@ -32,12 +32,14 @@ create table if not exists chart_symbols (
   parent_ids uuid[] not null default '{}',
   attach_type text not null default 'stitch',
   color text,
-  loop_count integer not null default 3
+  loop_count integer not null default 3,
+  base_stitch text not null default 'double'
 );
 
 -- Migrations for tables created before these columns existed.
 alter table chart_symbols add column if not exists color text;
 alter table chart_symbols add column if not exists loop_count integer not null default 3;
+alter table chart_symbols add column if not exists base_stitch text not null default 'double';
 
 create index if not exists chart_layers_user_id_idx on chart_layers (user_id);
 create index if not exists chart_symbols_user_id_idx on chart_symbols (user_id);

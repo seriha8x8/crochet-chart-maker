@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
-import type { SymbolType } from "@/types/chart";
+import type { BobbleBaseStitch, SymbolType } from "@/types/chart";
 
 interface SymbolShapeProps {
   type: SymbolType;
@@ -22,6 +22,30 @@ interface SymbolShapeProps {
   hookMark?: "front" | "back";
   /** Number of loops/legs drawn inside a bobble or puff stitch. Defaults to 3. */
   loopCount?: number;
+  /** Which stitch a bobble/puff's legs are decorated as (crossbar, +slashes). Defaults to "double". */
+  baseStitch?: BobbleBaseStitch;
+}
+
+/** Crossbar (+ slashes for double/triple) at the top of one bobble/puff leg, matching the
+ *  decoration on the standalone halfDouble/double/triple symbols. topY is where this leg's
+ *  own top sits (its "head"); slash spacing scales off the leg's full span, 0 to topY. */
+function legDecoration(x: number, topY: number, baseStitch: BobbleBaseStitch, key: string) {
+  const topW = 2.6;
+  const slashLen = 3;
+  const elems = [<line key={`${key}-top`} x1={x - topW} y1={topY} x2={x + topW} y2={topY} />];
+  if (baseStitch === "double" || baseStitch === "triple") {
+    const midY = topY * 0.7;
+    elems.push(
+      <line key={`${key}-s1`} x1={x - slashLen / 2} y1={midY + slashLen / 2} x2={x + slashLen / 2} y2={midY - slashLen / 2} />,
+    );
+  }
+  if (baseStitch === "triple") {
+    const midY2 = topY * 0.55;
+    elems.push(
+      <line key={`${key}-s2`} x1={x - slashLen / 2} y1={midY2 + slashLen / 2} x2={x + slashLen / 2} y2={midY2 - slashLen / 2} />,
+    );
+  }
+  return elems;
 }
 
 const HOOK_R = 5;
@@ -38,6 +62,7 @@ export function SymbolShape({
   headOffset = 0,
   hookMark,
   loopCount = 3,
+  baseStitch = "double",
 }: SymbolShapeProps) {
   const height = SYMBOL_DEFS[type].height;
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -145,19 +170,14 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // 3 small loops (chain-3) fanning from the base, with the closing slip stitch as a dot.
-      const petalW = 3;
-      const petalLen = height;
-      const petalPath = `M 0,0 C ${-petalW},${-petalLen * 0.3} ${-petalW},${-petalLen * 0.75} 0,${-petalLen} C ${petalW},${-petalLen * 0.75} ${petalW},${-petalLen * 0.3} 0,0 Z`;
+      // A picot is a few chains closed into a single loop by a slip stitch: one small
+      // closed loop (the chains' ends joined together), with a dot at the base for the
+      // slip stitch that closes it — not a multi-petal flower.
+      const loopW = 4;
+      const loopPath = `M 0,0 C ${-loopW},${-height * 0.3} ${-loopW},${-height * 0.75} 0,${-height} C ${loopW},${-height * 0.75} ${loopW},${-height * 0.3} 0,0 Z`;
       shape = (
         <g {...common}>
-          <g transform="rotate(-32)">
-            <path d={petalPath} />
-          </g>
-          <path d={petalPath} />
-          <g transform="rotate(32)">
-            <path d={petalPath} />
-          </g>
+          <path d={loopPath} />
           <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
       );
@@ -174,8 +194,6 @@ export function SymbolShape({
       const spread = bw * 1.6;
       const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
       const interiorXs = legXs.slice(1, -1);
-      const markY = -height * 0.42;
-      const markSize = 2.4;
       shape = (
         <g {...common}>
           <path
@@ -184,12 +202,7 @@ export function SymbolShape({
           {interiorXs.map((lx) => (
             <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + inset} />
           ))}
-          {legXs.map((lx) => (
-            <g key={`m${lx}`}>
-              <line x1={lx - markSize} y1={markY - markSize} x2={lx + markSize} y2={markY + markSize} />
-              <line x1={lx - markSize} y1={markY + markSize} x2={lx + markSize} y2={markY - markSize} />
-            </g>
-          ))}
+          {legXs.map((lx) => legDecoration(lx, -height, baseStitch, `leg${lx}`))}
         </g>
       );
       break;
@@ -205,8 +218,6 @@ export function SymbolShape({
       const spread = bw * 1.5;
       const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
       const interiorXs = legXs.slice(1, -1);
-      const markY = -height * 0.42;
-      const markSize = 2.4;
       shape = (
         <g {...common}>
           <path
@@ -216,12 +227,7 @@ export function SymbolShape({
           {interiorXs.map((lx) => (
             <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + rimRy} />
           ))}
-          {legXs.map((lx) => (
-            <g key={`m${lx}`}>
-              <line x1={lx - markSize} y1={markY - markSize} x2={lx + markSize} y2={markY + markSize} />
-              <line x1={lx - markSize} y1={markY + markSize} x2={lx + markSize} y2={markY - markSize} />
-            </g>
-          ))}
+          {legXs.map((lx) => legDecoration(lx, -height + rimRy, baseStitch, `leg${lx}`))}
         </g>
       );
       break;
@@ -246,22 +252,24 @@ export function SymbolShape({
   // stitch symbol (hooked around the previous round's post rather than piercing its
   // head) — a closed circle reads as a separate mark stuck onto the leg, not a curl.
   // The hook sits entirely above y=0, tangent to the (shortened) leg at its opening, and
-  // open toward the leg so the leg visually flows into it.
+  // open toward the leg so the leg visually flows into it — the arc STARTS exactly where
+  // the leg ends (no gap there) and sweeps a full 180°, so the two are always connected;
+  // only the far half (the "mouth") is open.
   const dir = hookMark === "front" ? -1 : 1;
   const center = { x: dir * HOOK_R, y: -HOOK_R };
-  const openingAngle = dir === -1 ? 90 : 270; // angle (0=up, clockwise+) facing the leg
-  const gap = 90; // degrees of open mouth (90 = a full semicircle), centered on openingAngle
+  const openingAngle = dir === -1 ? 90 : 270; // angle (0=up, clockwise+) of the leg's end point
   const angleToPoint = (deg: number) => {
     const rad = (deg * Math.PI) / 180;
     return { x: center.x + HOOK_R * Math.sin(rad), y: center.y - HOOK_R * Math.cos(rad) };
   };
-  const start = angleToPoint(openingAngle + gap);
-  const end = angleToPoint(openingAngle - gap);
+  const start = angleToPoint(openingAngle);
+  const end = angleToPoint(openingAngle + 180);
+  const sweepFlag = dir === -1 ? 1 : 0; // curls through the bottom either way, mirrored
   return (
     <>
       {shape}
       <path
-        d={`M ${start.x},${start.y} A ${HOOK_R},${HOOK_R} 0 1 1 ${end.x},${end.y}`}
+        d={`M ${start.x},${start.y} A ${HOOK_R},${HOOK_R} 0 0,${sweepFlag} ${end.x},${end.y}`}
         fill="none"
         stroke={stroke}
         strokeWidth={strokeWidth}
