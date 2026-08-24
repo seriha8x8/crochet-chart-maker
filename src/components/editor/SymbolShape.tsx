@@ -48,7 +48,7 @@ function legDecoration(x: number, topY: number, baseStitch: BobbleBaseStitch, ke
   return elems;
 }
 
-const HOOK_R = 5;
+const HOOK_R = 7.5;
 
 /**
  * Renders a symbol pointing "up": foot at (0,0), head at (0,-height).
@@ -170,14 +170,23 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // A picot is a few chains closed into a single loop by a slip stitch: one small
-      // closed loop (the chains' ends joined together), with a dot at the base for the
-      // slip stitch that closes it — not a multi-petal flower.
-      const loopW = 4;
-      const loopPath = `M 0,0 C ${-loopW},${-height * 0.3} ${-loopW},${-height * 0.75} 0,${-height} C ${loopW},${-height * 0.75} ${loopW},${-height * 0.3} 0,0 Z`;
+      // 3 chain stitches (drawn as the same oval as the standalone chain symbol) with
+      // their ends joined together, closed by a slip stitch (a dot) at the base.
+      const chainRx = 4.2;
+      const chainRy = 2.8;
+      const topCy = -height * 0.82;
+      const sideCy = -height * 0.42;
+      const sideCx = 3.6;
+      const sideRotate = 42;
       shape = (
         <g {...common}>
-          <path d={loopPath} />
+          <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${-sideCx},${sideCy}) rotate(${-sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          </g>
+          <g transform={`translate(${sideCx},${sideCy}) rotate(${sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          </g>
           <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
       );
@@ -200,7 +209,7 @@ export function SymbolShape({
             d={`M 0,0 C ${-bw},${-height * 0.15} ${-bw},${-height * 0.85} 0,${-height} C ${bw},${-height * 0.85} ${bw},${-height * 0.15} 0,0 Z`}
           />
           {interiorXs.map((lx) => (
-            <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + inset} />
+            <path key={lx} d={`M ${lx},${-inset} Q ${lx + lx * 0.3},${-height / 2} ${lx},${-height + inset}`} />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height, baseStitch, `leg${lx}`))}
         </g>
@@ -225,7 +234,10 @@ export function SymbolShape({
           />
           <ellipse cx={0} cy={-height} rx={bw} ry={rimRy} />
           {interiorXs.map((lx) => (
-            <line key={lx} x1={lx} y1={-inset} x2={lx} y2={-height + rimRy} />
+            <path
+              key={lx}
+              d={`M ${lx},${-inset} Q ${lx + lx * 0.3},${-height / 2} ${lx},${-height + rimRy}`}
+            />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height + rimRy, baseStitch, `leg${lx}`))}
         </g>
