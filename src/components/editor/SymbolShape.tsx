@@ -68,9 +68,9 @@ export function SymbolShape({
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const feetChanged = feetOffsets.length > 1 || feetOffsets[0] !== 0 || headOffset !== 0;
   // When hooking around a post, the leg stops short of the actual foot point (0,0) so a
-  // loop can be drawn entirely above it, tangent to both the leg and the y=0 baseline —
-  // otherwise half the loop would hang below the row it's meant to sit on.
-  const legFootY = hookMark ? -HOOK_R : 0;
+  // loop can be drawn entirely above it — from its top (where the leg meets it) down to
+  // the y=0 baseline — otherwise half the loop would hang below the row it sits on.
+  const legFootY = hookMark ? -2 * HOOK_R : 0;
 
   let shape: ReactNode;
 
@@ -171,21 +171,23 @@ export function SymbolShape({
     }
     case "picot": {
       // 3 chain stitches (drawn as the same oval as the standalone chain symbol) with
-      // their ends joined together, closed by a slip stitch (a dot) at the base.
+      // their ends joined together, closed by a slip stitch (a dot) at the base. The two
+      // side chains pivot from the shared base point (0,0) — like the leg fan elsewhere in
+      // this file — so they stay close together near the base and spread apart higher up,
+      // leaving a ▽-shaped gap between them, rather than splaying apart at the base (大).
       const chainRx = 4.2;
       const chainRy = 2.8;
       const topCy = -height * 0.82;
-      const sideCy = -height * 0.42;
-      const sideCx = 3.6;
-      const sideRotate = 42;
+      const sideDist = height * 0.4;
+      const sideRotate = 38;
       shape = (
         <g {...common}>
           <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
-          <g transform={`translate(${-sideCx},${sideCy}) rotate(${-sideRotate})`}>
-            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          <g transform={`rotate(${-sideRotate})`}>
+            <ellipse cx={0} cy={-sideDist} rx={chainRx} ry={chainRy} />
           </g>
-          <g transform={`translate(${sideCx},${sideCy}) rotate(${sideRotate})`}>
-            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          <g transform={`rotate(${sideRotate})`}>
+            <ellipse cx={0} cy={-sideDist} rx={chainRx} ry={chainRy} />
           </g>
           <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
@@ -209,7 +211,7 @@ export function SymbolShape({
             d={`M 0,0 C ${-bw},${-height * 0.15} ${-bw},${-height * 0.85} 0,${-height} C ${bw},${-height * 0.85} ${bw},${-height * 0.15} 0,0 Z`}
           />
           {interiorXs.map((lx) => (
-            <path key={lx} d={`M ${lx},${-inset} Q ${lx + lx * 0.3},${-height / 2} ${lx},${-height + inset}`} />
+            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height + inset}`} />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height, baseStitch, `leg${lx}`))}
         </g>
@@ -223,7 +225,6 @@ export function SymbolShape({
       const interiorCount = n - 2;
       const bw = 5.5 + interiorCount * 1.6;
       const rimRy = 3;
-      const inset = 1.5;
       const spread = bw * 1.5;
       const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
       const interiorXs = legXs.slice(1, -1);
@@ -234,10 +235,7 @@ export function SymbolShape({
           />
           <ellipse cx={0} cy={-height} rx={bw} ry={rimRy} />
           {interiorXs.map((lx) => (
-            <path
-              key={lx}
-              d={`M ${lx},${-inset} Q ${lx + lx * 0.3},${-height / 2} ${lx},${-height + rimRy}`}
-            />
+            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height + rimRy}`} />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height + rimRy, baseStitch, `leg${lx}`))}
         </g>
@@ -260,28 +258,28 @@ export function SymbolShape({
 
   if (!hookMark) return shape;
 
-  // An open "C" hook curling out from the foot, like the base of a real front/back-post
+  // An open "C" hook hanging from the leg's end, like the base of a real front/back-post
   // stitch symbol (hooked around the previous round's post rather than piercing its
-  // head) — a closed circle reads as a separate mark stuck onto the leg, not a curl.
-  // The hook sits entirely above y=0, tangent to the (shortened) leg at its opening, and
-  // open toward the leg so the leg visually flows into it — the arc STARTS exactly where
-  // the leg ends (no gap there) and sweeps a full 180°, so the two are always connected;
-  // only the far half (the "mouth") is open.
+  // head). The leg meets the TOP of the circle (not its side) so the loop hangs straight
+  // below the leg, opening sideways — a gap at the top would read as a "U" cupped under
+  // the leg rather than a "C" hanging from it. The circle's bottom sits on the y=0
+  // baseline so nothing pokes below the row it's attached to.
   const dir = hookMark === "front" ? -1 : 1;
-  const center = { x: dir * HOOK_R, y: -HOOK_R };
-  const openingAngle = dir === -1 ? 90 : 270; // angle (0=up, clockwise+) of the leg's end point
+  const center = { x: 0, y: -HOOK_R };
+  const gapCenterAngle = dir === -1 ? 270 : 90; // side the opening faces (0=up, clockwise+)
+  const halfGap = 55; // degrees of open mouth on each side of gapCenterAngle
   const angleToPoint = (deg: number) => {
     const rad = (deg * Math.PI) / 180;
     return { x: center.x + HOOK_R * Math.sin(rad), y: center.y - HOOK_R * Math.cos(rad) };
   };
-  const start = angleToPoint(openingAngle);
-  const end = angleToPoint(openingAngle + 180);
-  const sweepFlag = dir === -1 ? 1 : 0; // curls through the bottom either way, mirrored
+  const start = angleToPoint(gapCenterAngle + halfGap);
+  const end = angleToPoint(gapCenterAngle - halfGap);
+  const sweepFlag = 1; // walk the long way around, through the top (the leg) and bottom
   return (
     <>
       {shape}
       <path
-        d={`M ${start.x},${start.y} A ${HOOK_R},${HOOK_R} 0 0,${sweepFlag} ${end.x},${end.y}`}
+        d={`M ${start.x},${start.y} A ${HOOK_R},${HOOK_R} 0 1,${sweepFlag} ${end.x},${end.y}`}
         fill="none"
         stroke={stroke}
         strokeWidth={strokeWidth}
