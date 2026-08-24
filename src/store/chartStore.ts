@@ -388,7 +388,7 @@ export const useChartStore = create<ChartState>()(
 
       setLoopCount: (id, count) => {
         get().pushHistory();
-        const loopCount = Math.max(1, Math.round(count));
+        const loopCount = Math.max(2, Math.round(count));
         set({
           symbols: get().symbols.map((s) => (s.id === id ? { ...s, loopCount } : s)),
         });

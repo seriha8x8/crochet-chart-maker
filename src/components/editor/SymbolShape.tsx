@@ -165,7 +165,7 @@ export function SymbolShape({
     }
     case "bobble": {
       // Lens/almond outline (pointed at both foot and head) with one loop per stitch inside.
-      const n = Math.max(1, loopCount);
+      const n = Math.max(2, loopCount);
       const bw = 4.5 + (n - 1) * 1.8;
       const step = n > 1 ? (bw * 1.1) / (n - 1) : 0;
       const inset = 1.5;
@@ -184,7 +184,7 @@ export function SymbolShape({
     }
     case "puff": {
       // Open-top "vase" outline (flat rim at the head, pointed at the foot) with one loop per stitch inside.
-      const n = Math.max(1, loopCount);
+      const n = Math.max(2, loopCount);
       const bw = 5.5 + (n - 1) * 1.8;
       const step = n > 1 ? (bw * 1.0) / (n - 1) : 0;
       const rimRy = 3;
@@ -219,15 +219,31 @@ export function SymbolShape({
 
   if (!hookMark) return shape;
 
-  // A loop curling out from the foot, like the base of a real front/back-post stitch
-  // symbol (hooked around the previous round's post rather than piercing its head).
-  // Sits entirely above y=0 — tangent to the (shortened) leg at its top and to the
-  // y=0 baseline at its bottom — so it reads as one continuous curl, not a separate mark.
+  // An open "C" hook curling out from the foot, like the base of a real front/back-post
+  // stitch symbol (hooked around the previous round's post rather than piercing its
+  // head) — a closed circle reads as a separate mark stuck onto the leg, not a curl.
+  // The hook sits entirely above y=0, tangent to the (shortened) leg at its opening, and
+  // open toward the leg so the leg visually flows into it.
   const dir = hookMark === "front" ? -1 : 1;
+  const center = { x: dir * HOOK_R, y: -HOOK_R };
+  const openingAngle = dir === -1 ? 90 : 270; // angle (0=up, clockwise+) facing the leg
+  const gap = 35; // degrees of open mouth, centered on openingAngle
+  const angleToPoint = (deg: number) => {
+    const rad = (deg * Math.PI) / 180;
+    return { x: center.x + HOOK_R * Math.sin(rad), y: center.y - HOOK_R * Math.cos(rad) };
+  };
+  const start = angleToPoint(openingAngle + gap);
+  const end = angleToPoint(openingAngle - gap);
   return (
     <>
       {shape}
-      <circle cx={dir * HOOK_R} cy={-HOOK_R} r={HOOK_R} fill="none" stroke={stroke} strokeWidth={strokeWidth} />
+      <path
+        d={`M ${start.x},${start.y} A ${HOOK_R},${HOOK_R} 0 1 1 ${end.x},${end.y}`}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
     </>
   );
 }

@@ -183,10 +183,10 @@ export function PropertiesPanel() {
           <div className="flex items-center gap-1">
             <input
               type="number"
-              min={1}
+              min={2}
               className="w-full rounded border border-peach/60 px-2 py-1 text-sm text-ink"
-              value={symbol.loopCount}
-              onChange={(e) => setLoopCount(symbol.id, Number(e.target.value) || 1)}
+              value={symbol.loopCount ?? 3}
+              onChange={(e) => setLoopCount(symbol.id, Number(e.target.value) || 2)}
             />
             <span>目の{def.label}</span>
           </div>
