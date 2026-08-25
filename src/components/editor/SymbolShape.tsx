@@ -48,7 +48,7 @@ function legDecoration(x: number, topY: number, baseStitch: BobbleBaseStitch, ke
   return elems;
 }
 
-const HOOK_R = 7.5;
+const HOOK_R = 4.9; // 65% of the previous 7.5 — the loop was reading too large
 
 /**
  * Renders a symbol pointing "up": foot at (0,0), head at (0,-height).
@@ -170,24 +170,33 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // 3 chain stitches (drawn as the same oval as the standalone chain symbol) with
-      // their ends joined together, closed by a slip stitch (a dot) at the base. The two
-      // side chains pivot from the shared base point (0,0) — like the leg fan elsewhere in
-      // this file — so they stay close together near the base and spread apart higher up,
-      // leaving a ▽-shaped gap between them, rather than splaying apart at the base (大).
+      // 3 chain stitches (drawn as the same oval as the standalone chain symbol), worked
+      // one after another — not radiating from one shared point: the 1st heads up-left
+      // (↖) from the base, the 2nd continues from the 1st's tip running parallel to the
+      // previous row, and the 3rd continues from there heading back down-left (↙) toward
+      // the base, closed by a slip stitch (a dot) there.
       const chainRx = 4.2;
       const chainRy = 2.8;
-      const topCy = -height * 0.82;
-      const sideDist = height * 0.4;
-      const sideRotate = 38;
+      const chainLen = height * 0.55;
+      const dirPoint = (deg: number) => {
+        const rad = (deg * Math.PI) / 180;
+        return { x: Math.sin(rad), y: -Math.cos(rad) };
+      };
+      const p0 = { x: 0, y: 0 };
+      const d1 = dirPoint(-45); // ↖
+      const p1 = { x: p0.x + chainLen * d1.x, y: p0.y + chainLen * d1.y };
+      const d2 = dirPoint(90); // parallel to the previous row
+      const p2 = { x: p1.x + chainLen * d2.x, y: p1.y + chainLen * d2.y };
       shape = (
         <g {...common}>
-          <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
-          <g transform={`rotate(${-sideRotate})`}>
-            <ellipse cx={0} cy={-sideDist} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${p0.x},${p0.y}) rotate(-45)`}>
+            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
           </g>
-          <g transform={`rotate(${sideRotate})`}>
-            <ellipse cx={0} cy={-sideDist} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${p1.x},${p1.y}) rotate(90)`}>
+            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
+          </g>
+          <g transform={`translate(${p2.x},${p2.y}) rotate(225)`}>
+            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
           </g>
           <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
@@ -196,22 +205,27 @@ export function SymbolShape({
     }
     case "bobble": {
       // Lens/almond outline (pointed at both foot and head): the outline's own 2 curves
-      // ARE the first 2 legs, with a straight interior line per stitch beyond that — so a
+      // ARE the first 2 legs, with a curved interior line per stitch beyond that — so a
       // 2-loop bobble is just the plain leaf shape, not the leaf plus 2 redundant sticks.
+      // legXs are evenly spaced and the outline's own curves terminate exactly at the
+      // outermost two, instead of always converging back to center — otherwise the outer
+      // legs' decoration sits at a different spot than where their curve actually ends,
+      // and the gap next to them reads as uneven next to the interior legs' even spacing.
       const n = Math.max(2, loopCount);
       const interiorCount = n - 2;
       const bw = 4.5 + interiorCount * 1.6;
-      const inset = 1.5;
-      const spread = bw * 1.6;
-      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
+      const step = (2 * bw) / (n - 1);
+      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
       const interiorXs = legXs.slice(1, -1);
+      const topL = legXs[0];
+      const topR = legXs[n - 1];
       shape = (
         <g {...common}>
           <path
-            d={`M 0,0 C ${-bw},${-height * 0.15} ${-bw},${-height * 0.85} 0,${-height} C ${bw},${-height * 0.85} ${bw},${-height * 0.15} 0,0 Z`}
+            d={`M 0,0 C ${topL * 0.9},${-height * 0.15} ${topL},${-height * 0.7} ${topL},${-height} L ${topR},${-height} C ${topR},${-height * 0.7} ${topR * 0.9},${-height * 0.15} 0,0 Z`}
           />
           {interiorXs.map((lx) => (
-            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height + inset}`} />
+            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height}`} />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height, baseStitch, `leg${lx}`))}
         </g>
@@ -220,13 +234,14 @@ export function SymbolShape({
     }
     case "puff": {
       // Open-top "vase" outline (flat rim at the head, pointed at the foot): same logic as
-      // bobble — the outline's own 2 side curves are the first 2 legs.
+      // bobble — the outline's own 2 side curves are the first 2 legs, terminating exactly
+      // at the outermost of the evenly-spaced legXs (which also sets the rim's width).
       const n = Math.max(2, loopCount);
       const interiorCount = n - 2;
       const bw = 5.5 + interiorCount * 1.6;
       const rimRy = 3;
-      const spread = bw * 1.5;
-      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (spread / Math.max(1, n - 1)));
+      const step = (2 * bw) / (n - 1);
+      const legXs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
       const interiorXs = legXs.slice(1, -1);
       shape = (
         <g {...common}>
