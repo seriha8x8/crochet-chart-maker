@@ -96,7 +96,7 @@ export function SymbolShape({
     }
     case "slipStitch": {
       const cy = -height / 2;
-      shape = <circle cx={0} cy={cy} r={3} fill={stroke} stroke="none" />;
+      shape = <ellipse cx={0} cy={cy} rx={6} ry={3.5} fill={stroke} stroke="none" />;
       break;
     }
     case "singleCrochet": {
@@ -172,33 +172,23 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // 3 chain stitches (drawn as the same oval as the standalone chain symbol), worked
-      // one after another — not radiating from one shared point: the 1st heads up-left
-      // (↖) from the base, the 2nd continues from the 1st's tip running parallel to the
-      // previous row, and the 3rd continues from there heading back down-left (↙) toward
-      // the base, closed by a slip stitch (a dot) there.
+      // 3 chain stitches (the same size ellipse as the standalone chain symbol), fanned out
+      // from one shared base point — not chained tip-to-tip: one straight up, the other two
+      // leaning out to each side — and closed by a slip stitch (a dot) at that base point.
       const chainRx = 7.5; // same radii as the standalone chain symbol's ellipse
       const chainRy = 5;
-      const chainLen = height * 0.55;
-      const dirPoint = (deg: number) => {
-        const rad = (deg * Math.PI) / 180;
-        return { x: Math.sin(rad), y: -Math.cos(rad) };
-      };
-      const p0 = { x: 0, y: 0 };
-      const d1 = dirPoint(-45); // ↖
-      const p1 = { x: p0.x + chainLen * d1.x, y: p0.y + chainLen * d1.y };
-      const d2 = dirPoint(90); // parallel to the previous row
-      const p2 = { x: p1.x + chainLen * d2.x, y: p1.y + chainLen * d2.y };
+      const topCy = -height * 0.82;
+      const sideCy = -height * 0.42;
+      const sideCx = height * 0.26;
+      const sideRotate = 42;
       shape = (
         <g {...common}>
-          <g transform={`translate(${p0.x},${p0.y}) rotate(-45)`}>
-            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
+          <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${-sideCx},${sideCy}) rotate(${-sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
           </g>
-          <g transform={`translate(${p1.x},${p1.y}) rotate(90)`}>
-            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
-          </g>
-          <g transform={`translate(${p2.x},${p2.y}) rotate(225)`}>
-            <ellipse cx={0} cy={-chainLen / 2} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${sideCx},${sideCy}) rotate(${sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
           </g>
           <circle cx={0} cy={0} r={2.2} fill={stroke} stroke="none" />
         </g>
@@ -213,6 +203,8 @@ export function SymbolShape({
       // outermost two, instead of always converging back to center — otherwise the outer
       // legs' decoration sits at a different spot than where their curve actually ends,
       // and the gap next to them reads as uneven next to the interior legs' even spacing.
+      // Every leg (outline's own + interior) bows outward, away from center — like the
+      // outermost two curves of the outline itself — not inward toward it.
       const n = Math.max(2, loopCount);
       const interiorCount = n - 2;
       const bw = 4.5 + interiorCount * 1.6;
@@ -227,7 +219,10 @@ export function SymbolShape({
             d={`M 0,0 C ${topL * 0.9},${-height * 0.15} ${topL},${-height * 0.7} ${topL},${-height} L ${topR},${-height} C ${topR},${-height * 0.7} ${topR * 0.9},${-height * 0.15} 0,0 Z`}
           />
           {interiorXs.map((lx) => (
-            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height}`} />
+            <path
+              key={lx}
+              d={`M 0,0 C ${lx * 0.9},${-height * 0.15} ${lx},${-height * 0.7} ${lx},${-height}`}
+            />
           ))}
           {legXs.map((lx) => legDecoration(lx, -height, baseStitch, `leg${lx}`))}
         </g>
@@ -251,9 +246,12 @@ export function SymbolShape({
             d={`M ${-bw},${-height} C ${-bw * 1.15},${-height * 0.5} ${-bw * 0.25},${-height * 0.05} 0,0 C ${bw * 0.25},${-height * 0.05} ${bw * 1.15},${-height * 0.5} ${bw},${-height}`}
           />
           <ellipse cx={0} cy={-height} rx={bw} ry={rimRy} />
-          {interiorXs.map((lx) => (
-            <path key={lx} d={`M 0,0 Q ${lx * 0.4},${-height * 0.6} ${lx},${-height + rimRy}`} />
-          ))}
+          {interiorXs.map((lx) => {
+            const topY = -height + rimRy;
+            return (
+              <path key={lx} d={`M 0,0 C ${lx * 0.9},${topY * 0.15} ${lx},${topY * 0.7} ${lx},${topY}`} />
+            );
+          })}
           {legXs.map((lx) => legDecoration(lx, -height + rimRy, baseStitch, `leg${lx}`))}
         </g>
       );

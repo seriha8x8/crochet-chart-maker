@@ -62,8 +62,8 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     type: "slipStitch",
     label: "引き抜き編み",
     shortLabel: "引抜",
-    height: 8,
-    width: 8,
+    height: 10,
+    width: 14,
   },
   singleCrochet: {
     type: "singleCrochet",
