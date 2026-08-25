@@ -59,25 +59,27 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     height: 14,
     width: 14,
   },
+  // height = 85% of N chain-stitch heights (N = 2/3/4 for half-double/double/triple),
+  // matching how many chains each stitch is conventionally as tall as.
   halfDouble: {
     type: "halfDouble",
     label: "中長編み",
     shortLabel: "中長",
-    height: 20,
+    height: 23.8, // 85% of 2 chains (14 * 2)
     width: 12,
   },
   double: {
     type: "double",
     label: "長編み",
     shortLabel: "長編",
-    height: 26,
+    height: 35.7, // 85% of 3 chains
     width: 12,
   },
   triple: {
     type: "triple",
     label: "長々編み",
     shortLabel: "長々",
-    height: 32,
+    height: 47.6, // 85% of 4 chains
     width: 12,
   },
   picot: {

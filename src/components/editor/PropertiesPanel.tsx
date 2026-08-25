@@ -300,32 +300,36 @@ export function PropertiesPanel() {
             />
             束に編む（隙間の中央）
           </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              name="attachType"
-              className="accent-pink"
-              checked={symbol.attachType === "pullUpFront"}
-              onChange={() => {
-                setAttachType(symbol.id, "pullUpFront" as AttachType);
-                applyAttachSnap(symbol.id);
-              }}
-            />
-            引き上げる（表）
-          </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              name="attachType"
-              className="accent-pink"
-              checked={symbol.attachType === "pullUpBack"}
-              onChange={() => {
-                setAttachType(symbol.id, "pullUpBack" as AttachType);
-                applyAttachSnap(symbol.id);
-              }}
-            />
-            引き上げる（裏）
-          </label>
+          {symbol.type !== "singleCrochet" && (
+            <>
+              <label className="flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="attachType"
+                  className="accent-pink"
+                  checked={symbol.attachType === "pullUpFront"}
+                  onChange={() => {
+                    setAttachType(symbol.id, "pullUpFront" as AttachType);
+                    applyAttachSnap(symbol.id);
+                  }}
+                />
+                引き上げる（表）
+              </label>
+              <label className="flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="attachType"
+                  className="accent-pink"
+                  checked={symbol.attachType === "pullUpBack"}
+                  onChange={() => {
+                    setAttachType(symbol.id, "pullUpBack" as AttachType);
+                    applyAttachSnap(symbol.id);
+                  }}
+                />
+                引き上げる（裏）
+              </label>
+            </>
+          )}
         </div>
       </div>
 

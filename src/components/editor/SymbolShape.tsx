@@ -67,10 +67,12 @@ export function SymbolShape({
   const height = SYMBOL_DEFS[type].height;
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const feetChanged = feetOffsets.length > 1 || feetOffsets[0] !== 0 || headOffset !== 0;
-  // When hooking around a post, the leg stops short of the actual foot point (0,0) so a
-  // loop can be drawn entirely above it — from its top (where the leg meets it) down to
-  // the y=0 baseline — otherwise half the loop would hang below the row it sits on.
-  const legFootY = hookMark ? -2 * HOOK_R : 0;
+  // When hooking around a post (front/back-post stitch), the leg itself keeps 95% of the
+  // stitch's normal length — it only stops 5% short of the foot point (0,0) — and the "C"
+  // hook is drawn hanging from there, dipping below the y=0 row baseline into the row
+  // below (where the post it hooks around actually is), rather than being squeezed to fit
+  // above the baseline.
+  const legFootY = hookMark ? -height * 0.05 : 0;
 
   let shape: ReactNode;
 
@@ -274,22 +276,23 @@ export function SymbolShape({
   if (!hookMark) return shape;
 
   // An open "C" hook hanging from the leg's end, like the base of a real front/back-post
-  // stitch symbol (hooked around the previous round's post rather than piercing its
-  // head). The leg meets the TOP of the circle (not its side) so the loop hangs straight
-  // below the leg, opening sideways — a gap at the top would read as a "U" cupped under
-  // the leg rather than a "C" hanging from it. The circle's bottom sits on the y=0
-  // baseline so nothing pokes below the row it's attached to.
+  // stitch symbol (hooked around the post in the row below rather than piercing its
+  // head). The arc's path literally STARTS at (0, legFootY) — the leg's own end point —
+  // instead of merely passing near it, so the two strokes share a vertex and always read
+  // as one continuous mark, however the two are rendered. From there it sweeps almost a
+  // full turn (leaving a small gap as the hook's open mouth) around a circle hanging
+  // below that point; front curls counterclockwise (toward the left) and back curls
+  // clockwise (toward the right), so the two attach types are mirror images of each other.
   const dir = hookMark === "front" ? -1 : 1;
-  const center = { x: 0, y: -HOOK_R };
-  const gapCenterAngle = dir === -1 ? 270 : 90; // side the opening faces (0=up, clockwise+)
-  const halfGap = 55; // degrees of open mouth on each side of gapCenterAngle
+  const center = { x: 0, y: legFootY + HOOK_R };
+  const gapDeg = 70; // width of the open mouth, left at the end of the sweep
   const angleToPoint = (deg: number) => {
     const rad = (deg * Math.PI) / 180;
     return { x: center.x + HOOK_R * Math.sin(rad), y: center.y - HOOK_R * Math.cos(rad) };
   };
-  const start = angleToPoint(gapCenterAngle + halfGap);
-  const end = angleToPoint(gapCenterAngle - halfGap);
-  const sweepFlag = 1; // walk the long way around, through the top (the leg) and bottom
+  const start = angleToPoint(0); // = (0, legFootY): exactly where the leg ends
+  const end = angleToPoint(dir * (360 - gapDeg));
+  const sweepFlag = dir > 0 ? 1 : 0;
   return (
     <>
       {shape}
