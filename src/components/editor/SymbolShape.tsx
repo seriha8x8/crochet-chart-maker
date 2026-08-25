@@ -172,21 +172,26 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // 2 open chain loops side by side at the top, closed underneath by one larger filled
-      // oval (the slip stitch that closes the picot, drawn the same way as the standalone
-      // slip-stitch symbol) — not 3 open loops with a small dot.
-      const loopRx = 6;
-      const loopRy = 5;
-      const loopCx = 5.5; // slight overlap between the 2 loops, like a figure-8
-      const topCy = -height * 0.6;
-      const closeRx = 8.5;
-      const closeRy = 5.5;
-      const closeCy = -height * 0.24; // overlaps the loops' lower edge, not just touching
+      // 3 chain stitches (same radii as the standalone chain symbol), one on each side of an
+      // upside-down triangle (▽) — one across the top, one down the left side, one down the
+      // right — spaced apart so no two loops overlap. Closed at the base by a filled oval the
+      // same size as the standalone slip-stitch symbol, not a small dot.
+      const chainRx = 7.5;
+      const chainRy = 5;
+      const topCy = -height * 0.78;
+      const sideCy = -height * 0.4;
+      const sideCx = height * 0.34;
+      const sideRotate = 40;
       shape = (
         <g {...common}>
-          <ellipse cx={-loopCx} cy={topCy} rx={loopRx} ry={loopRy} />
-          <ellipse cx={loopCx} cy={topCy} rx={loopRx} ry={loopRy} />
-          <ellipse cx={0} cy={closeCy} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
+          <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${-sideCx},${sideCy}) rotate(${-sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          </g>
+          <g transform={`translate(${sideCx},${sideCy}) rotate(${sideRotate})`}>
+            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          </g>
+          <ellipse cx={0} cy={0} rx={6} ry={3.5} fill={stroke} stroke="none" />
         </g>
       );
       break;
