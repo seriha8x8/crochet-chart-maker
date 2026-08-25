@@ -1,4 +1,4 @@
-import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { getSymbolHeight } from "@/lib/symbols/definitions";
 import type { ChartSymbol } from "@/types/chart";
 
 export interface Point {
@@ -23,8 +23,8 @@ export function getFootPoint(symbol: Pick<ChartSymbol, "x" | "y">): Point {
   return { x: symbol.x, y: symbol.y };
 }
 
-export function getHeadPoint(symbol: Pick<ChartSymbol, "x" | "y" | "rotation" | "type">): Point {
-  const height = SYMBOL_DEFS[symbol.type].height;
+export function getHeadPoint(symbol: Pick<ChartSymbol, "x" | "y" | "rotation" | "type" | "baseStitch">): Point {
+  const height = getSymbolHeight(symbol);
   return localToWorld(symbol, { x: 0, y: -height });
 }
 

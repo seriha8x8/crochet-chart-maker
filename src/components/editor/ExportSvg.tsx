@@ -1,6 +1,6 @@
 import { forwardRef, useMemo } from "react";
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR, getSymbolHeight } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
 import { getFootPoint, getHeadPoint, computeConnectionOffsets } from "@/lib/symbols/geometry";
 
@@ -21,7 +21,7 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
     let maxY = -Infinity;
     for (const s of visibleSymbols) {
       const def = SYMBOL_DEFS[s.type];
-      const pad = Math.max(def.width, def.height, 16) / 2 + 4;
+      const pad = Math.max(def.width, getSymbolHeight(s), 16) / 2 + 4;
       for (const p of [getFootPoint(s), getHeadPoint(s)]) {
         minX = Math.min(minX, p.x - pad);
         minY = Math.min(minY, p.y - pad);

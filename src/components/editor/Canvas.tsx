@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, DEFAULT_SYMBOL_COLOR, getSymbolHeight } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
 import { getFootPoint, getHeadPoint, centroid, computeConnectionOffsets, type Point } from "@/lib/symbols/geometry";
 import { computeSnap } from "@/lib/symbols/snapping";
@@ -501,11 +501,12 @@ export function Canvas() {
             const isLinkedParent =
               parentLinkTargetId && symbolById.get(parentLinkTargetId)?.parentIds.includes(symbol.id);
             const def = SYMBOL_DEFS[symbol.type];
-            const visualR = Math.max(def.width, def.height, 16) / 2 + 7;
+            const height = getSymbolHeight(symbol);
+            const visualR = Math.max(def.width, height, 16) / 2 + 7;
             // While a placement tool is armed, shrink the clickable area down to roughly the
             // glyph itself. Otherwise the generous hit padding of a symbol in the row below
             // swallows clicks meant to place a new symbol just above it (rows sit close together).
-            const hitR = placementTool ? Math.max(def.width, def.height) / 2 + 1 : visualR;
+            const hitR = placementTool ? Math.max(def.width, height) / 2 + 1 : visualR;
             const strokeColor = isLinkTarget
               ? "#7c3aed"
               : isLinkedParent
@@ -523,11 +524,11 @@ export function Canvas() {
                 onPointerDown={(e) => onSymbolPointerDown(e, symbol)}
                 style={{ cursor: parentLinkTargetId ? "pointer" : "grab" }}
               >
-                <circle cx={0} cy={-def.height / 2} r={hitR} fill="transparent" />
+                <circle cx={0} cy={-height / 2} r={hitR} fill="transparent" />
                 {(isSelected || isHighlighted || isLinkTarget || isLinkedParent) && (
                   <circle
                     cx={0}
-                    cy={-def.height / 2}
+                    cy={-height / 2}
                     r={visualR - 2}
                     fill="none"
                     stroke={strokeColor}
@@ -635,8 +636,7 @@ function RotateHandle({
   symbol: ChartSymbol;
   onPointerDown: (e: React.PointerEvent, symbol: ChartSymbol) => void;
 }) {
-  const def = SYMBOL_DEFS[symbol.type];
-  const handleDist = def.height + 24;
+  const handleDist = getSymbolHeight(symbol) + 24;
   const rad = (symbol.rotation * Math.PI) / 180;
   const hx = symbol.x + handleDist * Math.sin(rad);
   const hy = symbol.y - handleDist * Math.cos(rad);

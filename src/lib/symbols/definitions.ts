@@ -1,4 +1,4 @@
-import type { SymbolType } from "@/types/chart";
+import type { BobbleBaseStitch, SymbolType } from "@/types/chart";
 
 export interface SymbolDef {
   type: SymbolType;
@@ -29,6 +29,19 @@ export const SYMBOL_ORDER: SymbolType[] = [
 
 /** Stitch types whose leg count / foot position can change with connection count (増減目). */
 export const LEG_VARIABLE_TYPES: SymbolType[] = ["singleCrochet", "halfDouble", "double", "triple"];
+
+/**
+ * A symbol's actual rendered height. Same as SYMBOL_DEFS[type].height for every type except
+ * bobble/puff, whose height instead matches whichever stitch their legs are worked as
+ * (baseStitch) — a 3-loop bobble worked in double crochet is exactly as tall as a plain
+ * double crochet, not a fixed size regardless of what it's made of.
+ */
+export function getSymbolHeight(symbol: { type: SymbolType; baseStitch?: BobbleBaseStitch }): number {
+  if (symbol.type === "bobble" || symbol.type === "puff") {
+    return SYMBOL_DEFS[symbol.baseStitch ?? "double"].height;
+  }
+  return SYMBOL_DEFS[symbol.type].height;
+}
 
 export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
   ring: {
@@ -86,8 +99,8 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     type: "picot",
     label: "ピコット",
     shortLabel: "ピコ",
-    height: 14,
-    width: 14,
+    height: 25, // grown to fit 3 chain-sized loops (see the picot case in SymbolShape)
+    width: 22,
   },
   bobble: {
     type: "bobble",

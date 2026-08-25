@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, getSymbolHeight } from "@/lib/symbols/definitions";
 import type { BobbleBaseStitch, SymbolType } from "@/types/chart";
 
 interface SymbolShapeProps {
@@ -64,7 +64,7 @@ export function SymbolShape({
   loopCount = 3,
   baseStitch = "double",
 }: SymbolShapeProps) {
-  const height = SYMBOL_DEFS[type].height;
+  const height = getSymbolHeight({ type, baseStitch });
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const feetChanged = feetOffsets.length > 1 || feetOffsets[0] !== 0 || headOffset !== 0;
   // When hooking around a post (front/back-post stitch), the leg itself keeps 95% of the
@@ -177,8 +177,8 @@ export function SymbolShape({
       // (↖) from the base, the 2nd continues from the 1st's tip running parallel to the
       // previous row, and the 3rd continues from there heading back down-left (↙) toward
       // the base, closed by a slip stitch (a dot) there.
-      const chainRx = 4.2;
-      const chainRy = 2.8;
+      const chainRx = 7.5; // same radii as the standalone chain symbol's ellipse
+      const chainRy = 5;
       const chainLen = height * 0.55;
       const dirPoint = (deg: number) => {
         const rad = (deg * Math.PI) / 180;
