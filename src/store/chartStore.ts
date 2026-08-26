@@ -11,6 +11,7 @@ import type {
   SymbolType,
 } from "@/types/chart";
 import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
+import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
 
 const DEFAULT_LAYER_ID = uuid();
 
@@ -123,6 +124,27 @@ interface ChartState {
   resetProject: () => void;
 }
 
+// Extra breathing room added when snapping onto a parent, so the child's foot doesn't land
+// flush against it — about 30% of a single crochet's height.
+const ATTACH_GAP = SYMBOL_DEFS.singleCrochet.height * 0.3;
+
+/** Average, over all parents, of each one's own foot->head direction (unit vector) — "up" as
+ *  that round of stitches actually runs, accounting for rotation. Falls back to straight up
+ *  if every parent is a zero-height point (e.g. a ring). */
+function averageUpDirection(parents: ChartSymbol[]): Point {
+  const dirs = parents.map((p) => {
+    const foot = getFootPoint(p);
+    const head = getHeadPoint(p);
+    const dx = head.x - foot.x;
+    const dy = head.y - foot.y;
+    const len = Math.hypot(dx, dy);
+    return len > 0 ? { x: dx / len, y: dy / len } : { x: 0, y: -1 };
+  });
+  const avg = centroid(dirs);
+  const len = Math.hypot(avg.x, avg.y);
+  return len > 0 ? { x: avg.x / len, y: avg.y / len } : { x: 0, y: -1 };
+}
+
 function snapSymbolToParents(symbol: ChartSymbol, allSymbols: ChartSymbol[]): ChartSymbol {
   if (symbol.parentIds.length === 0) return symbol;
   const parents = allSymbols.filter((s) => symbol.parentIds.includes(s.id));
@@ -134,12 +156,13 @@ function snapSymbolToParents(symbol: ChartSymbol, allSymbols: ChartSymbol[]): Ch
     const heads = centroid(parents.map((p) => getHeadPoint(p)));
     return { ...symbol, x: (feet.x + heads.x) / 2, y: (feet.y + heads.y) / 2 };
   }
+  const up = averageUpDirection(parents);
   if (symbol.attachType === "stitch") {
     const target = centroid(parents.map((p) => getHeadPoint(p)));
-    return { ...symbol, x: target.x, y: target.y };
+    return { ...symbol, x: target.x + up.x * ATTACH_GAP, y: target.y + up.y * ATTACH_GAP };
   } else {
     const target = centroid(parents.map((p) => getFootPoint(p)));
-    return { ...symbol, x: target.x, y: target.y };
+    return { ...symbol, x: target.x + up.x * ATTACH_GAP, y: target.y + up.y * ATTACH_GAP };
   }
 }
 
