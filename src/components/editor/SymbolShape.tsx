@@ -172,29 +172,36 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // Traced from an exact reference drawn in viewBox="0 0 100 123": 3 open loops (center,
-      // radii, rotation all given in that viewBox's own coordinates) plus 1 filled closing
-      // oval. S rescales that viewBox's full height (123, its bottom-to-top) onto this
-      // symbol's own foot-to-head span, and its horizontal center (x=50) onto local x=0.
+      // Layout (centers + rotation) traced from an exact reference drawn in
+      // viewBox="0 0 100 123": 3 open loops plus 1 filled closing oval. S rescales that
+      // viewBox's full height (123, its bottom-to-top) onto this symbol's own foot-to-head
+      // span, and its horizontal center (x=50) onto local x=0 — position only; each loop's
+      // own radii are fixed to match the standalone chain symbol's ellipse exactly, and the
+      // closing oval's to match the standalone slip-stitch symbol's, rather than scaling
+      // with S too.
       const S = height / 123;
       const toLocal = (vx: number, vy: number) => ({ x: (vx - 50) * S, y: (vy - 123) * S });
       const loop1 = toLocal(52, 38);
       const loop2 = toLocal(29, 71);
       const loop3 = toLocal(72, 72);
       const close = toLocal(49, 109);
+      const loopRx = 7.5; // same radii as the standalone chain symbol's ellipse
+      const loopRy = 5;
+      const closeRx = 6; // same radii as the standalone slip-stitch symbol's ellipse
+      const closeRy = 3.5;
       shape = (
         <g {...common}>
           <g transform={`translate(${loop1.x},${loop1.y}) rotate(90)`}>
-            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
+            <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
           <g transform={`translate(${loop2.x},${loop2.y}) rotate(141)`}>
-            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.4 / 2) * S} />
+            <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
           <g transform={`translate(${loop3.x},${loop3.y}) rotate(-141)`}>
-            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
+            <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
           <g transform={`translate(${close.x},${close.y}) rotate(90)`}>
-            <ellipse cx={0} cy={0} rx={(21.5 / 2) * S} ry={(37.0 / 2) * S} fill={stroke} stroke="none" />
+            <ellipse cx={0} cy={0} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
           </g>
         </g>
       );
