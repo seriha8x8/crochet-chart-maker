@@ -191,18 +191,14 @@ export function SymbolShape({
       const closeRy = 3.5;
       shape = (
         <g {...common}>
-          <g transform={`translate(${loop1.x},${loop1.y}) rotate(90)`}>
+          <ellipse cx={loop1.x} cy={loop1.y} rx={loopRx} ry={loopRy} />
+          <g transform={`translate(${loop2.x},${loop2.y}) rotate(51)`}>
             <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
-          <g transform={`translate(${loop2.x},${loop2.y}) rotate(141)`}>
+          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-51)`}>
             <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
-          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-141)`}>
-            <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
-          </g>
-          <g transform={`translate(${close.x},${close.y}) rotate(90)`}>
-            <ellipse cx={0} cy={0} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
-          </g>
+          <ellipse cx={close.x} cy={close.y} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
         </g>
       );
       break;
