@@ -172,30 +172,26 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // 3 open, vertically-elongated loops surrounding a center point — one straight up top,
-      // one tilted down-left, one tilted down-right (an upside-down triangle, ▽) — spaced
-      // apart so none overlap. The closing stitch is a 4th, separate vertically-elongated
-      // filled oval sitting BELOW all 3 loops (its top edge meeting the two side loops'
-      // bottom edges), not tucked into the gap between them.
-      const chainRx = 5;
-      const chainRy = 7;
-      const topCy = -height * 0.85;
-      const sideCy = -height * 0.55;
-      const sideCx = height * 0.32;
-      const sideRotate = 40;
-      const closeRx = 3;
-      const closeRy = 4.5;
-      const closeCy = -height * 0.12;
+      // Traced from an exact reference drawn in viewBox="0 0 100 123": 3 open loops (center,
+      // radii, rotation all given in that viewBox's own coordinates) plus 1 filled closing
+      // oval. S rescales that viewBox's full height (123, its bottom-to-top) onto this
+      // symbol's own foot-to-head span, and its horizontal center (x=50) onto local x=0.
+      const S = height / 123;
+      const toLocal = (vx: number, vy: number) => ({ x: (vx - 50) * S, y: (vy - 123) * S });
+      const loop1 = toLocal(52, 38);
+      const loop2 = toLocal(29, 71);
+      const loop3 = toLocal(72, 72);
+      const close = toLocal(49, 109);
       shape = (
         <g {...common}>
-          <ellipse cx={0} cy={topCy} rx={chainRx} ry={chainRy} />
-          <g transform={`translate(${-sideCx},${sideCy}) rotate(${-sideRotate})`}>
-            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          <ellipse cx={loop1.x} cy={loop1.y} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
+          <g transform={`translate(${loop2.x},${loop2.y}) rotate(51)`}>
+            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.4 / 2) * S} />
           </g>
-          <g transform={`translate(${sideCx},${sideCy}) rotate(${sideRotate})`}>
-            <ellipse cx={0} cy={0} rx={chainRx} ry={chainRy} />
+          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-53)`}>
+            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
           </g>
-          <ellipse cx={0} cy={closeCy} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
+          <ellipse cx={close.x} cy={close.y} rx={(21.5 / 2) * S} ry={(37.0 / 2) * S} fill={stroke} stroke="none" />
         </g>
       );
       break;
