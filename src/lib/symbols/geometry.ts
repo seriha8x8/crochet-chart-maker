@@ -48,6 +48,12 @@ export interface ConnectionOffsets {
   feet: number[];
   /** Local x-offset of the head (and its decoration: crossbar, X, slash marks) from center. */
   headOffset: number;
+  /** This symbol's 0-based position among its increase siblings, and how many there are —
+   *  only set for the increase case (1 shared parent, 2+ siblings). singleCrochet uses this
+   *  to draw one shared "V + ×" glyph for a 2-into-1 increase instead of two separate,
+   *  overlapping symbols; undefined for every other case. */
+  siblingIndex?: number;
+  siblingCount?: number;
 }
 
 const IDENTITY_OFFSETS: ConnectionOffsets = { feet: [0], headOffset: 0 };
@@ -80,7 +86,13 @@ export function computeConnectionOffsets(
     );
     if (siblings.length > 1) {
       const idx = siblings.findIndex((s) => s.id === symbol.id);
-      if (idx >= 0) return { feet: [0], headOffset: (idx - (siblings.length - 1) / 2) * HEAD_FAN_STEP };
+      if (idx >= 0)
+        return {
+          feet: [0],
+          headOffset: (idx - (siblings.length - 1) / 2) * HEAD_FAN_STEP,
+          siblingIndex: idx,
+          siblingCount: siblings.length,
+        };
     }
   }
   return IDENTITY_OFFSETS;

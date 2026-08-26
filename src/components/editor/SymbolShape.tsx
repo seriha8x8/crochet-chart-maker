@@ -24,6 +24,11 @@ interface SymbolShapeProps {
   loopCount?: number;
   /** Which stitch a bobble/puff's legs are decorated as (crossbar, +slashes). Defaults to "double". */
   baseStitch?: BobbleBaseStitch;
+  /** This symbol's 0-based position among its increase siblings, and how many there are —
+   *  see ConnectionOffsets in lib/symbols/geometry.ts. Only singleCrochet uses these, to draw
+   *  one shared "V + ×" glyph for a 2-into-1 increase across both sibling instances. */
+  siblingIndex?: number;
+  siblingCount?: number;
 }
 
 /** Crossbar (+ slashes for double/triple) at the top of one bobble/puff leg, matching the
@@ -63,6 +68,8 @@ export function SymbolShape({
   hookMark,
   loopCount = 3,
   baseStitch = "double",
+  siblingIndex,
+  siblingCount,
 }: SymbolShapeProps) {
   const height = getSymbolHeight({ type, baseStitch });
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -100,6 +107,27 @@ export function SymbolShape({
       break;
     }
     case "singleCrochet": {
+      // 2 single crochets worked into one stitch (2目編み入れる): one shared glyph — an
+      // outer V from the common foot out to both stitches' positions, plus one small ×
+      // nested in the gap near its top, unconnected to the V — instead of two separate
+      // symbols each drawing their own × and leg (which just overlapped into a mess, since
+      // the fanned-out heads sit closer together than each ×'s own width). Drawn once, on
+      // the first sibling; the second renders nothing so it isn't drawn twice.
+      if (siblingCount === 2) {
+        if (siblingIndex !== 0) {
+          shape = null;
+          break;
+        }
+        shape = (
+          <g {...common}>
+            <line x1={-12.2} y1={-13.1} x2={0} y2={0} />
+            <line x1={0} y1={0} x2={11.7} y2={-13.2} />
+            <line x1={-3.6} y1={-13.2} x2={3.2} y2={-6.1} />
+            <line x1={-3.7} y1={-6.1} x2={3.2} y2={-13.2} />
+          </g>
+        );
+        break;
+      }
       const s = 6;
       const cy = -height / 2;
       shape = (

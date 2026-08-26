@@ -547,6 +547,8 @@ export function Canvas() {
                   }
                   loopCount={symbol.loopCount}
                   baseStitch={symbol.baseStitch}
+                  siblingIndex={connectionOffsets.siblingIndex}
+                  siblingCount={connectionOffsets.siblingCount}
                 />
               </g>
             );

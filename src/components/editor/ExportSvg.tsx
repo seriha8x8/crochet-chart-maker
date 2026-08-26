@@ -61,6 +61,8 @@ export const ExportSvg = forwardRef<SVGSVGElement>(function ExportSvg(_props, re
                 }
                 loopCount={symbol.loopCount}
                 baseStitch={symbol.baseStitch}
+                siblingIndex={connectionOffsets.siblingIndex}
+                siblingCount={connectionOffsets.siblingCount}
               />
             </g>
           );
