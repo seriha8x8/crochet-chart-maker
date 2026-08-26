@@ -184,14 +184,18 @@ export function SymbolShape({
       const close = toLocal(49, 109);
       shape = (
         <g {...common}>
-          <ellipse cx={loop1.x} cy={loop1.y} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
-          <g transform={`translate(${loop2.x},${loop2.y}) rotate(51)`}>
-            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.4 / 2) * S} />
-          </g>
-          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-53)`}>
+          <g transform={`translate(${loop1.x},${loop1.y}) rotate(90)`}>
             <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
           </g>
-          <ellipse cx={close.x} cy={close.y} rx={(21.5 / 2) * S} ry={(37.0 / 2) * S} fill={stroke} stroke="none" />
+          <g transform={`translate(${loop2.x},${loop2.y}) rotate(141)`}>
+            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.4 / 2) * S} />
+          </g>
+          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-141)`}>
+            <ellipse cx={0} cy={0} rx={(26.0 / 2) * S} ry={(41.5 / 2) * S} />
+          </g>
+          <g transform={`translate(${close.x},${close.y}) rotate(90)`}>
+            <ellipse cx={0} cy={0} rx={(21.5 / 2) * S} ry={(37.0 / 2) * S} fill={stroke} stroke="none" />
+          </g>
         </g>
       );
       break;
