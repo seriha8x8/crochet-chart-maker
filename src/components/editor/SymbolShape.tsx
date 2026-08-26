@@ -172,33 +172,23 @@ export function SymbolShape({
       break;
     }
     case "picot": {
-      // Layout (centers + rotation) traced from an exact reference drawn in
-      // viewBox="0 0 100 123": 3 open loops plus 1 filled closing oval. S rescales that
-      // viewBox's full height (123, its bottom-to-top) onto this symbol's own foot-to-head
-      // span, and its horizontal center (x=50) onto local x=0 — position only; each loop's
-      // own radii are fixed to match the standalone chain symbol's ellipse exactly, and the
-      // closing oval's to match the standalone slip-stitch symbol's, rather than scaling
-      // with S too.
-      const S = height / 123;
-      const toLocal = (vx: number, vy: number) => ({ x: (vx - 50) * S, y: (vy - 123) * S });
-      const loop1 = toLocal(52, 38);
-      const loop2 = toLocal(29, 71);
-      const loop3 = toLocal(72, 72);
-      const close = toLocal(49, 109);
+      // Exact reference, already given in this symbol's own local coordinates (foot at
+      // (0,0), up = -y): 3 open loops (chain-sized) plus 1 filled closing oval
+      // (slip-stitch-sized).
       const loopRx = 7.5; // same radii as the standalone chain symbol's ellipse
       const loopRy = 5;
       const closeRx = 6; // same radii as the standalone slip-stitch symbol's ellipse
       const closeRy = 3.5;
       shape = (
         <g {...common}>
-          <ellipse cx={loop1.x} cy={loop1.y} rx={loopRx} ry={loopRy} />
-          <g transform={`translate(${loop2.x},${loop2.y}) rotate(51)`}>
+          <ellipse cx={0.4} cy={-8.4} rx={loopRx} ry={loopRy} />
+          <g transform="translate(-8.3,4.0) rotate(51)">
             <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
-          <g transform={`translate(${loop3.x},${loop3.y}) rotate(-51)`}>
+          <g transform="translate(7.9,4.4) rotate(-51)">
             <ellipse cx={0} cy={0} rx={loopRx} ry={loopRy} />
           </g>
-          <ellipse cx={close.x} cy={close.y} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
+          <ellipse cx={-0.7} cy={15.8} rx={closeRx} ry={closeRy} fill={stroke} stroke="none" />
         </g>
       );
       break;
