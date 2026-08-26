@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { SYMBOL_DEFS, getSymbolHeight } from "@/lib/symbols/definitions";
+import type { Point } from "@/lib/symbols/geometry";
 import type { BobbleBaseStitch, SymbolType } from "@/types/chart";
 
 interface SymbolShapeProps {
@@ -7,12 +8,12 @@ interface SymbolShapeProps {
   stroke?: string;
   strokeWidth?: number;
   /**
-   * Local x-offsets (y=0, or -HOOK_R when hookMark is set) to draw this symbol's leg(s)
-   * from instead of the default single centered leg — see computeConnectionOffsets in
-   * lib/symbols/geometry.ts for how this represents a decrease (multiple legs into one
-   * head). Defaults to a single centered leg, i.e. unchanged.
+   * Local points to draw this symbol's leg(s) from instead of the default single centered
+   * leg — see computeConnectionOffsets in lib/symbols/geometry.ts for how this represents a
+   * decrease (multiple legs, each reaching its own parent, into one head). Defaults to a
+   * single centered leg, i.e. unchanged.
    */
-  feetOffsets?: number[];
+  feetOffsets?: Point[];
   /**
    * Local x-offset of the head (and its decoration) from center, representing an
    * increase — see computeConnectionOffsets. Defaults to 0, i.e. unchanged.
@@ -63,7 +64,7 @@ export function SymbolShape({
   type,
   stroke = "#2a211d",
   strokeWidth = 1.6,
-  feetOffsets = [0],
+  feetOffsets = [{ x: 0, y: 0 }],
   headOffset = 0,
   hookMark,
   loopCount = 3,
@@ -73,7 +74,8 @@ export function SymbolShape({
 }: SymbolShapeProps) {
   const height = getSymbolHeight({ type, baseStitch });
   const common = { stroke, strokeWidth, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  const feetChanged = feetOffsets.length > 1 || feetOffsets[0] !== 0 || headOffset !== 0;
+  const feetChanged =
+    feetOffsets.length > 1 || feetOffsets[0].x !== 0 || feetOffsets[0].y !== 0 || headOffset !== 0;
   // When hooking around a post (front/back-post stitch), the leg itself keeps 95% of the
   // stitch's normal length — it only stops 5% short of the foot point (0,0) — and the "C"
   // hook is drawn hanging from there, dipping below the y=0 row baseline into the row
@@ -142,7 +144,9 @@ export function SymbolShape({
           <line x1={headOffset - s} y1={cy - s} x2={headOffset + s} y2={cy + s} />
           <line x1={headOffset + s} y1={cy - s} x2={headOffset - s} y2={cy + s} />
           {(feetChanged || hookMark) &&
-            feetOffsets.map((fx) => <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={cy} />)}
+            feetOffsets.map((foot, i) => (
+              <line key={i} x1={foot.x} y1={hookMark ? legFootY : foot.y} x2={headOffset} y2={cy} />
+            ))}
         </g>
       );
       break;
@@ -151,8 +155,8 @@ export function SymbolShape({
       const topW = 5;
       shape = (
         <g {...common}>
-          {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
+          {feetOffsets.map((foot, i) => (
+            <line key={i} x1={foot.x} y1={hookMark ? legFootY : foot.y} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
         </g>
@@ -165,8 +169,8 @@ export function SymbolShape({
       const slashLen = 5;
       shape = (
         <g {...common}>
-          {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
+          {feetOffsets.map((foot, i) => (
+            <line key={i} x1={foot.x} y1={hookMark ? legFootY : foot.y} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
@@ -186,8 +190,8 @@ export function SymbolShape({
       const slashLen = 5;
       shape = (
         <g {...common}>
-          {feetOffsets.map((fx) => (
-            <line key={fx} x1={fx} y1={legFootY} x2={headOffset} y2={-height} />
+          {feetOffsets.map((foot, i) => (
+            <line key={i} x1={foot.x} y1={hookMark ? legFootY : foot.y} x2={headOffset} y2={-height} />
           ))}
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
