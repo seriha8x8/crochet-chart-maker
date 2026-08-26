@@ -50,7 +50,7 @@ export interface ConnectionOffsets {
   headOffset: number;
   /** This symbol's 0-based position among its increase siblings, and how many there are —
    *  only set for the increase case (1 shared parent, 2+ siblings). singleCrochet uses this
-   *  to draw one shared "V + ×" glyph for a 2-into-1 increase instead of two separate,
+   *  to draw one shared "V + ×" glyph for a N-into-1 increase instead of separate,
    *  overlapping symbols; undefined for every other case. */
   siblingIndex?: number;
   siblingCount?: number;

@@ -26,7 +26,7 @@ interface SymbolShapeProps {
   baseStitch?: BobbleBaseStitch;
   /** This symbol's 0-based position among its increase siblings, and how many there are —
    *  see ConnectionOffsets in lib/symbols/geometry.ts. Only singleCrochet uses these, to draw
-   *  one shared "V + ×" glyph for a 2-into-1 increase across both sibling instances. */
+   *  one shared "V + ×" glyph for a N-into-1 increase across all sibling instances. */
   siblingIndex?: number;
   siblingCount?: number;
 }
@@ -107,23 +107,30 @@ export function SymbolShape({
       break;
     }
     case "singleCrochet": {
-      // 2 single crochets worked into one stitch (2目編み入れる): one shared glyph — an
-      // outer V from the common foot out to both stitches' positions, plus one small ×
-      // nested in the gap near its top, unconnected to the V — instead of two separate
-      // symbols each drawing their own × and leg (which just overlapped into a mess, since
-      // the fanned-out heads sit closer together than each ×'s own width). Drawn once, on
-      // the first sibling; the second renders nothing so it isn't drawn twice.
-      if (siblingCount === 2) {
+      // N single crochets worked into one stitch (N目編み入れる): one shared glyph — an
+      // outer V from the common foot out to both outer stitches' positions, a small ×
+      // nested near its top (unconnected to the V), and — for N=3 — one extra short
+      // vertical line between the V's arms per additional stitch beyond 2 — instead of N
+      // separate symbols each drawing their own × and leg (which just overlapped into a
+      // mess, since the fanned-out heads sit closer together than each ×'s own width).
+      // Drawn once, on the first sibling; the rest render nothing so it isn't drawn N times.
+      if (siblingCount && siblingCount >= 2) {
         if (siblingIndex !== 0) {
           shape = null;
           break;
         }
+        const extraCount = siblingCount - 2;
         shape = (
           <g {...common}>
-            <line x1={-12.2} y1={-13.1} x2={0} y2={0} />
-            <line x1={0} y1={0} x2={11.7} y2={-13.2} />
-            <line x1={-3.6} y1={-13.2} x2={3.2} y2={-6.1} />
-            <line x1={-3.7} y1={-6.1} x2={3.2} y2={-13.2} />
+            <line x1={-9.0} y1={-9.0} x2={0} y2={0} />
+            <line x1={0} y1={0} x2={9.2} y2={-9.0} />
+            <line x1={-2.5} y1={-10.1} x2={2.8} y2={-4.9} />
+            <line x1={-2.6} y1={-4.8} x2={2.8} y2={-10.0} />
+            {extraCount > 0 &&
+              Array.from({ length: extraCount }, (_, i) => {
+                const x = (i - (extraCount - 1) / 2) * 2.5;
+                return <line key={i} x1={x} y1={-4.3} x2={x} y2={-0.4} />;
+              })}
           </g>
         );
         break;
