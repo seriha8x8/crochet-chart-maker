@@ -12,6 +12,7 @@ import type {
 } from "@/types/chart";
 import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
+import type { Plan } from "@/lib/supabase/cloudSync";
 
 const DEFAULT_LAYER_ID = uuid();
 
@@ -63,6 +64,10 @@ interface ChartState {
   projects: SavedProject[];
   currentProjectId: string | null;
   canvasBackground: CanvasBackground;
+  /** null = signed out (or plan not loaded yet) — treated as free for gating purposes.
+   *  Live session state from Supabase Auth, not persisted to localStorage. */
+  plan: Plan | null;
+  setPlan: (plan: Plan | null) => void;
 
   saveProjectAs: (name: string) => void;
   saveCurrentProject: () => void;
@@ -184,6 +189,8 @@ export const useChartStore = create<ChartState>()(
       projects: [],
       currentProjectId: null,
       canvasBackground: "light",
+      plan: null,
+      setPlan: (plan) => set({ plan }),
 
       saveProjectAs: (name) => {
         const { symbols, layers, guide, projects } = get();

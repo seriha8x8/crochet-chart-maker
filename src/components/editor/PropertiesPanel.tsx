@@ -11,6 +11,54 @@ const BASE_STITCH_OPTIONS: { value: BobbleBaseStitch; label: string }[] = [
   { value: "triple", label: "長々編み" },
 ];
 
+/** Symbol coloring is a premium feature. Resetting to the default color is always allowed
+ *  (even on the free plan) so nobody gets stuck with a custom color from before a downgrade. */
+function ColorField({
+  color,
+  onChange,
+  onReset,
+}: {
+  color: string | null;
+  onChange: (hex: string) => void;
+  onReset: () => void;
+}) {
+  const plan = useChartStore((s) => s.plan);
+  const isPremium = plan === "premium";
+
+  if (!isPremium) {
+    return (
+      <div className="flex flex-col gap-1 text-xs text-ink/70">
+        <div className="flex items-center gap-1.5">
+          <span>色</span>
+          <span className="rounded bg-peach/30 px-1.5 py-0.5 text-[10px] text-ink/50">プレミアム限定</span>
+        </div>
+        {color && (
+          <button className="self-start text-[11px] text-ink/40 hover:text-pink" onClick={onReset}>
+            デフォルトに戻す
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <label className="flex items-center gap-2 text-xs text-ink/70">
+      色
+      <input
+        type="color"
+        className="h-7 w-7 cursor-pointer rounded border border-peach/60 p-0.5"
+        value={color ?? DEFAULT_SYMBOL_COLOR}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {color && (
+        <button className="text-[11px] text-ink/40 hover:text-pink" onClick={onReset}>
+          デフォルトに戻す
+        </button>
+      )}
+    </label>
+  );
+}
+
 export function PropertiesPanel() {
   const symbols = useChartStore((s) => s.symbols);
   const selectedIds = useChartStore((s) => s.selectedIds);
@@ -114,21 +162,11 @@ export function PropertiesPanel() {
             ⟳ 15°
           </button>
         </div>
-        <label className="flex items-center gap-2 text-xs text-ink/70">
-          色
-          <input
-            type="color"
-            className="h-7 w-7 cursor-pointer rounded border border-peach/60 p-0.5"
-            value={selected[0].color ?? DEFAULT_SYMBOL_COLOR}
-            onChange={(e) => setSymbolColor(selectedIds, e.target.value)}
-          />
-          <button
-            className="text-[11px] text-ink/40 hover:text-pink"
-            onClick={() => setSymbolColor(selectedIds, null)}
-          >
-            デフォルトに戻す
-          </button>
-        </label>
+        <ColorField
+          color={selected[0].color}
+          onChange={(hex) => setSymbolColor(selectedIds, hex)}
+          onReset={() => setSymbolColor(selectedIds, null)}
+        />
 
         {isOneGroup ? (
           <button
@@ -243,23 +281,11 @@ export function PropertiesPanel() {
         </div>
       </label>
 
-      <label className="flex items-center gap-2 text-xs text-ink/70">
-        色
-        <input
-          type="color"
-          className="h-7 w-7 cursor-pointer rounded border border-peach/60 p-0.5"
-          value={symbol.color ?? DEFAULT_SYMBOL_COLOR}
-          onChange={(e) => setSymbolColor([symbol.id], e.target.value)}
-        />
-        {symbol.color && (
-          <button
-            className="text-[11px] text-ink/40 hover:text-pink"
-            onClick={() => setSymbolColor([symbol.id], null)}
-          >
-            デフォルトに戻す
-          </button>
-        )}
-      </label>
+      <ColorField
+        color={symbol.color}
+        onChange={(hex) => setSymbolColor([symbol.id], hex)}
+        onReset={() => setSymbolColor([symbol.id], null)}
+      />
 
       <div className="flex flex-col gap-1.5 rounded-md border border-peach/50 p-2">
         <span className="text-xs font-semibold text-ink/50">前段との接続</span>
