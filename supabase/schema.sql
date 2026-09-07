@@ -48,12 +48,15 @@ alter table chart_projects enable row level security;
 alter table chart_layers enable row level security;
 alter table chart_symbols enable row level security;
 
+drop policy if exists "chart_projects_owner" on chart_projects;
 create policy "chart_projects_owner" on chart_projects
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "chart_layers_owner" on chart_layers;
 create policy "chart_layers_owner" on chart_layers
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "chart_symbols_owner" on chart_symbols;
 create policy "chart_symbols_owner" on chart_symbols
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
@@ -75,6 +78,7 @@ create table if not exists chart_profiles (
 
 alter table chart_profiles enable row level security;
 
+drop policy if exists "chart_profiles_owner" on chart_profiles;
 create policy "chart_profiles_owner" on chart_profiles
   for all using (auth.uid() = id) with check (auth.uid() = id);
 
