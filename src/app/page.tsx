@@ -34,14 +34,27 @@ const TOOLS = [
 ] as const;
 
 const SNS_LINKS = [
-  { key: "youtube", label: "YouTube", href: "https://www.youtube.com/@rii_amimono", src: "/yt_icon_red_digital.png" },
+  {
+    key: "youtube",
+    label: "YouTube",
+    href: "https://www.youtube.com/@rii_amimono",
+    src: "/yt_icon_red_digital.png",
+    sizeClass: "h-16 w-16",
+  },
   {
     key: "instagram",
     label: "Instagram",
     href: "https://www.instagram.com/rii_amimono/",
     src: "/Instagram_Glyph_Gradient.png",
+    sizeClass: "h-12 w-12",
   },
-  { key: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@rii_amimono", src: "/TikTok_Icon_Black_Circle.png" },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    href: "https://www.tiktok.com/@rii_amimono",
+    src: "/TikTok_Icon_Black_Circle.png",
+    sizeClass: "h-12 w-12",
+  },
 ] as const;
 
 export default function HomePage() {
@@ -100,7 +113,7 @@ export default function HomePage() {
           <h2 className="text-lg font-semibold" style={{ color: "#3D6B5C" }}>
             ＼ SNSも更新中 ／
           </h2>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-9">
             {SNS_LINKS.map((sns) => (
               <a
                 key={sns.key}
@@ -108,7 +121,7 @@ export default function HomePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={sns.label}
-                className="flex h-12 w-12 items-center justify-center transition hover:opacity-80"
+                className={`flex items-center justify-center transition hover:opacity-80 ${sns.sizeClass}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
                 <img src={sns.src} alt={sns.label} className="h-full w-full object-contain" />
