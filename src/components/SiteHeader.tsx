@@ -13,12 +13,13 @@ export function SiteHeader({ current }: { current: NavKey }) {
       style={{ backgroundColor: "#EAF7F2", borderColor: "#5BC8AC33" }}
     >
       <div className="flex items-center gap-2.5">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-          style={{ backgroundColor: "#5BC8AC" }}
-        >
-          R
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
+        <img
+          src="/image0.jpeg"
+          alt="rii's crochet tools"
+          className="h-9 w-9 shrink-0 rounded-full object-cover"
+          style={{ border: "1.5px solid #5BC8AC" }}
+        />
         <span className="whitespace-nowrap text-base font-semibold text-[#2f6f61]">rii&apos;s crochet tools</span>
       </div>
       <nav className="flex gap-4 text-sm sm:gap-6">
