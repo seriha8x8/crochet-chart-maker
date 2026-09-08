@@ -42,13 +42,13 @@ function legDecoration(x: number, topY: number, baseStitch: BobbleBaseStitch, ke
   if (baseStitch === "double" || baseStitch === "triple") {
     const midY = topY * 0.7;
     elems.push(
-      <line key={`${key}-s1`} x1={x - slashLen / 2} y1={midY + slashLen / 2} x2={x + slashLen / 2} y2={midY - slashLen / 2} />,
+      <line key={`${key}-s1`} x1={x - slashLen / 2} y1={midY - slashLen / 2} x2={x + slashLen / 2} y2={midY + slashLen / 2} />,
     );
   }
   if (baseStitch === "triple") {
     const midY2 = topY * 0.55;
     elems.push(
-      <line key={`${key}-s2`} x1={x - slashLen / 2} y1={midY2 + slashLen / 2} x2={x + slashLen / 2} y2={midY2 - slashLen / 2} />,
+      <line key={`${key}-s2`} x1={x - slashLen / 2} y1={midY2 - slashLen / 2} x2={x + slashLen / 2} y2={midY2 + slashLen / 2} />,
     );
   }
   return elems;
@@ -175,9 +175,9 @@ export function SymbolShape({
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
             x1={headOffset - slashLen / 2}
-            y1={midY + slashLen / 2}
+            y1={midY - slashLen / 2}
             x2={headOffset + slashLen / 2}
-            y2={midY - slashLen / 2}
+            y2={midY + slashLen / 2}
           />
         </g>
       );
@@ -196,15 +196,15 @@ export function SymbolShape({
           <line x1={headOffset - topW} y1={-height} x2={headOffset + topW} y2={-height} />
           <line
             x1={headOffset - slashLen / 2}
-            y1={mid1 + slashLen / 2}
+            y1={mid1 - slashLen / 2}
             x2={headOffset + slashLen / 2}
-            y2={mid1 - slashLen / 2}
+            y2={mid1 + slashLen / 2}
           />
           <line
             x1={headOffset - slashLen / 2}
-            y1={mid2 + slashLen / 2}
+            y1={mid2 - slashLen / 2}
             x2={headOffset + slashLen / 2}
-            y2={mid2 - slashLen / 2}
+            y2={mid2 + slashLen / 2}
           />
         </g>
       );

@@ -100,7 +100,7 @@ export const SYMBOL_DEFS: Record<SymbolType, SymbolDef> = {
     label: "ピコット",
     shortLabel: "ピコ",
     height: 25, // grown to fit 3 chain-sized loops (see the picot case in SymbolShape)
-    width: 22,
+    width: 30, // the 2 tilted loops' rotated bounding box reaches +-~14.4, not +-11
   },
   bobble: {
     type: "bobble",

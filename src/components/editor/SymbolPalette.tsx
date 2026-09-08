@@ -1,8 +1,27 @@
 "use client";
 
 import { useChartStore } from "@/store/chartStore";
-import { SYMBOL_DEFS, SYMBOL_ORDER } from "@/lib/symbols/definitions";
+import { SYMBOL_DEFS, SYMBOL_ORDER, getSymbolHeight } from "@/lib/symbols/definitions";
 import { SymbolShape } from "@/components/editor/SymbolShape";
+
+const ICON_PAD = 4;
+
+/** A fixed 26x26 viewBox clipped every symbol taller/wider than the smallest ones once
+ *  stitch heights started varying a lot (e.g. triple crochet is over 2x a chain). Each
+ *  symbol instead gets its own viewBox sized to its actual foot-to-head span (plus a
+ *  little padding), so the glyph always fits — bigger stitches just render a bit smaller
+ *  within the same 26x26 icon box rather than spilling out of it. */
+function paletteViewBox(type: (typeof SYMBOL_ORDER)[number]): string {
+  const def = SYMBOL_DEFS[type];
+  if (type === "ring") {
+    const r = 9 + ICON_PAD;
+    return `${-r} ${-r} ${r * 2} ${r * 2}`;
+  }
+  const height = getSymbolHeight({ type, baseStitch: "double" });
+  const viewW = def.width + ICON_PAD * 2;
+  const viewH = height + ICON_PAD * 2;
+  return `${-viewW / 2} ${-viewH + ICON_PAD} ${viewW} ${viewH}`;
+}
 
 export function SymbolPalette() {
   const placementTool = useChartStore((s) => s.placementTool);
@@ -38,10 +57,8 @@ export function SymbolPalette() {
                 setPlacementTool(active ? null : type);
               }}
             >
-              <svg width={26} height={26} viewBox="-13 -22 26 26">
-                <g transform="translate(0,0)">
-                  <SymbolShape type={type} stroke={active ? "#f57799" : "#2a211d"} />
-                </g>
+              <svg width={26} height={26} viewBox={paletteViewBox(type)}>
+                <SymbolShape type={type} stroke={active ? "#f57799" : "#2a211d"} />
               </svg>
               <span>{def.label}</span>
             </button>
