@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Toolbar } from "@/components/editor/Toolbar";
 import { SymbolPalette } from "@/components/editor/SymbolPalette";
 import { LayerPanel } from "@/components/editor/LayerPanel";
@@ -41,6 +42,7 @@ export function Editor() {
           <PropertiesPanel />
         </aside>
       </div>
+      <SiteFooter compact />
     </div>
   );
 }

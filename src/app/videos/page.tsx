@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "編み方動画 - rii's crochet tools",
@@ -77,6 +78,8 @@ export default function VideosPage() {
           </section>
         ))}
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
