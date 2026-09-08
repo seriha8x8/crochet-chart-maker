@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const TOOLS = [
   {
@@ -130,6 +131,8 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
