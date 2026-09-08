@@ -33,6 +33,7 @@ export function ProjectPanel() {
   const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
   const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
   const [isRecovery, setIsRecovery] = useState(false);
+  const plan = useChartStore((s) => s.plan);
   const setPlan = useChartStore((s) => s.setPlan);
   const resetProject = useChartStore((s) => s.resetProject);
 
@@ -79,12 +80,19 @@ export function ProjectPanel() {
     );
   }
 
+  // A free-plan user at their cloud save limit can't create a 4th project even
+  // temporarily/unsaved — otherwise the limit is really "3 saved + 1 free-floating extra",
+  // not an actual cap. Signed-out (local) users have no limit, so this never applies there.
+  const atProjectLimit = !!user && plan !== "premium" && cloudProjects.length >= FREE_PLAN_PROJECT_LIMIT;
+
   return (
     <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
         <button
-          className="text-[11px] text-pink hover:underline"
+          className="text-[11px] text-pink hover:underline disabled:cursor-not-allowed disabled:text-ink/30 disabled:no-underline"
+          disabled={atProjectLimit}
+          title={atProjectLimit ? `無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでのため、新しく始めることはできません。既存のプロジェクトを削除するか、プレミアムにアップグレードしてください。` : undefined}
           onClick={() => {
             if (!confirm("新しい編み図を始めます。今のキャンバスの内容は消えますが、保存済みのものはそのまま残ります。よろしいですか？")) return;
             resetProject();
@@ -101,6 +109,7 @@ export function ProjectPanel() {
           onRefresh={refreshAccount}
           currentCloudProjectId={currentCloudProjectId}
           setCurrentCloudProjectId={setCurrentCloudProjectId}
+          atProjectLimit={atProjectLimit}
         />
       ) : (
         <LocalProjectSection />
@@ -257,12 +266,14 @@ function CloudProjectSection({
   onRefresh,
   currentCloudProjectId,
   setCurrentCloudProjectId,
+  atProjectLimit,
 }: {
   user: User;
   cloudProjects: CloudProjectSummary[];
   onRefresh: (user: User) => Promise<void>;
   currentCloudProjectId: string | null;
   setCurrentCloudProjectId: (id: string | null) => void;
+  atProjectLimit: boolean;
 }) {
   const plan = useChartStore((s) => s.plan);
   const [showSaveAs, setShowSaveAs] = useState(false);
@@ -417,7 +428,9 @@ function CloudProjectSection({
           保存
         </button>
         <button
-          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={atProjectLimit}
+          title={atProjectLimit ? `無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでです。` : undefined}
           onClick={() => {
             setDraftName(currentProject ? `${currentProject.name}のコピー` : "無題の作品");
             setShowSaveAs(true);
