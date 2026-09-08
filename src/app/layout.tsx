@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "rii's crochet tools",
-  description: "自由配置で作るかぎ針編みの編み図エディタ",
+  description: "編み物がもっと楽しくなる！編み物好きのための便利ツール",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -90,7 +90,11 @@ function LoginPopover({ onClose }: { onClose: () => void }) {
 
     if (mode === "forgot") {
       setPending(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      // The "set a new password" recovery UI only exists on the editor page, so send the
+      // reset link's redirect there explicitly rather than the site's home page.
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/editor`,
+      });
       setPending(false);
       if (error) {
         setStatus(error.message);
@@ -106,7 +110,7 @@ function LoginPopover({ onClose }: { onClose: () => void }) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: `${window.location.origin}/editor` },
       });
       setPending(false);
       if (error) {

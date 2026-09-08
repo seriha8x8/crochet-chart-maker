@@ -494,7 +494,9 @@ function AccountLine({ user }: { user: User | null }) {
       if (mode === "forgot") {
         setStatus("送信中…");
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
+          // The "set a new password" recovery UI only exists on this editor page, so send
+          // the reset link's redirect here explicitly rather than the site's home page.
+          redirectTo: `${window.location.origin}/editor`,
         });
         setStatus(error ? error.message : null);
         if (!error) setInfo("パスワード再設定用のメールを送信しました。メール内のリンクから新しいパスワードを設定してください。");
@@ -506,7 +508,7 @@ function AccountLine({ user }: { user: User | null }) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: `${window.location.origin}/editor` },
         });
         setStatus(error ? error.message : null);
         if (!error) setInfo("確認メールを送信しました。メール内のリンクをクリックすると登録が完了します。");
