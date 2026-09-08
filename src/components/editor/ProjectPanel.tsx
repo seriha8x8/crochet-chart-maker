@@ -1,6 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  deleteCloudProject,
+  getProfilePlan,
+  listCloudProjects,
+  loadCloudProject,
+  renameCloudProject,
+  saveNewCloudProject,
+  setProfilePlanForTesting,
+  updateCloudProject,
+  FREE_PLAN_PROJECT_LIMIT,
+  ProjectLimitError,
+  type CloudProjectSummary,
+  type Plan,
+} from "@/lib/supabase/cloudSync";
 import { useChartStore } from "@/store/chartStore";
 
 function formatDate(iso: string) {
@@ -8,7 +24,58 @@ function formatDate(iso: string) {
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+/** Only one project switcher is ever shown: the local (this-browser) list while signed out,
+ *  the account's cloud list once signed in — never both, so there's no "which list is this"
+ *  confusion between two separately-saved sets of projects. */
 export function ProjectPanel() {
+  const configured = isSupabaseConfigured();
+  const [user, setUser] = useState<User | null>(null);
+  const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
+  const setPlan = useChartStore((s) => s.setPlan);
+
+  const refreshAccount = useCallback(
+    async (u: User) => {
+      const [fetchedPlan, projects] = await Promise.all([getProfilePlan(u.id), listCloudProjects(u.id)]);
+      setPlan(fetchedPlan);
+      setCloudProjects(projects);
+    },
+    [setPlan],
+  );
+
+  useEffect(() => {
+    if (!configured) return;
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+      if (data.user) refreshAccount(data.user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        refreshAccount(session.user);
+      } else {
+        setPlan(null);
+        setCloudProjects([]);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [configured, setPlan, refreshAccount]);
+
+  return (
+    <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
+      <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
+      {user ? (
+        <CloudProjectSection user={user} cloudProjects={cloudProjects} onRefresh={refreshAccount} />
+      ) : (
+        <LocalProjectSection />
+      )}
+      {configured && <AccountLine user={user} />}
+    </div>
+  );
+}
+
+function LocalProjectSection() {
   const projects = useChartStore((s) => s.projects);
   const currentProjectId = useChartStore((s) => s.currentProjectId);
   const saveProjectAs = useChartStore((s) => s.saveProjectAs);
@@ -37,9 +104,7 @@ export function ProjectPanel() {
   };
 
   return (
-    <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
-      <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
-
+    <>
       {sortedProjects.length > 0 ? (
         <select
           className="w-full truncate rounded-md border border-peach/60 bg-white px-2 py-1 text-sm text-ink"
@@ -147,6 +212,299 @@ export function ProjectPanel() {
           </button>
         </div>
       )}
+    </>
+  );
+}
+
+function CloudProjectSection({
+  user,
+  cloudProjects,
+  onRefresh,
+}: {
+  user: User;
+  cloudProjects: CloudProjectSummary[];
+  onRefresh: (user: User) => Promise<void>;
+}) {
+  const plan = useChartStore((s) => s.plan);
+  const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
+  const [showSaveAs, setShowSaveAs] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+
+  const refresh = useCallback(
+    async (u: User) => {
+      try {
+        await onRefresh(u);
+      } catch (e) {
+        setStatus(e instanceof Error ? e.message : "アカウント情報の取得に失敗しました");
+      }
+    },
+    [onRefresh],
+  );
+
+  const currentProject = cloudProjects.find((p) => p.id === currentCloudProjectId) ?? null;
+  const currentContent = () => {
+    const { symbols, layers, guide } = useChartStore.getState();
+    return { symbols, layers, guide };
+  };
+
+  const saveAsNew = async (name: string) => {
+    setStatus("保存中…");
+    try {
+      const saved = await saveNewCloudProject(user.id, plan ?? "free", { name, ...currentContent() });
+      setCurrentCloudProjectId(saved.id);
+      setShowSaveAs(false);
+      await refresh(user);
+      setStatus("保存しました");
+    } catch (e) {
+      if (e instanceof ProjectLimitError) {
+        setStatus(`無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでです。プレミアムにアップグレードすると無制限に保存できます。`);
+      } else {
+        setStatus(e instanceof Error ? e.message : "保存に失敗しました");
+      }
+    }
+  };
+
+  return (
+    <>
+      {cloudProjects.length > 0 ? (
+        <select
+          className="w-full truncate rounded-md border border-peach/60 bg-white px-2 py-1 text-sm text-ink"
+          value={currentCloudProjectId ?? ""}
+          onChange={async (e) => {
+            const id = e.target.value;
+            if (!id) return;
+            setStatus("読み込み中…");
+            try {
+              const project = await loadCloudProject(user.id, id);
+              if (project) {
+                useChartStore.setState({
+                  symbols: project.symbols,
+                  layers: project.layers.length > 0 ? project.layers : useChartStore.getState().layers,
+                  guide: project.guide,
+                  selectedIds: [],
+                });
+                setCurrentCloudProjectId(id);
+                setStatus(null);
+              }
+            } catch (err) {
+              setStatus(err instanceof Error ? err.message : "読み込みに失敗しました");
+            }
+          }}
+        >
+          {!currentProject && <option value="">未保存の作品</option>}
+          {cloudProjects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}（{formatDate(p.updatedAt)}）
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div className="truncate text-sm font-medium text-ink">未保存の作品</div>
+      )}
+
+      {currentProject && (
+        <div className="flex gap-1.5 text-xs">
+          {isRenaming ? (
+            <input
+              autoFocus
+              className="min-w-0 flex-1 rounded border border-pink/50 px-2 py-1 text-ink"
+              value={renameDraft}
+              onChange={(e) => setRenameDraft(e.target.value)}
+              onBlur={async () => {
+                setIsRenaming(false);
+                if (renameDraft.trim() && currentProject) {
+                  try {
+                    await renameCloudProject(user.id, currentProject.id, renameDraft.trim());
+                    await refresh(user);
+                  } catch (err) {
+                    setStatus(err instanceof Error ? err.message : "名前の変更に失敗しました");
+                  }
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                else if (e.key === "Escape") setIsRenaming(false);
+              }}
+            />
+          ) : (
+            <>
+              <button
+                className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+                onClick={() => {
+                  setRenameDraft(currentProject.name);
+                  setIsRenaming(true);
+                }}
+              >
+                名前を変更
+              </button>
+              <button
+                className="rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
+                onClick={async () => {
+                  if (!confirm(`「${currentProject.name}」を削除します。よろしいですか？`)) return;
+                  try {
+                    await deleteCloudProject(user.id, currentProject.id);
+                    setCurrentCloudProjectId(null);
+                    await refresh(user);
+                  } catch (err) {
+                    setStatus(err instanceof Error ? err.message : "削除に失敗しました");
+                  }
+                }}
+              >
+                削除
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-1.5 text-xs">
+        <button
+          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!currentProject}
+          onClick={async () => {
+            if (!currentProject) return;
+            setStatus("保存中…");
+            try {
+              await updateCloudProject(user.id, currentProject.id, { name: currentProject.name, ...currentContent() });
+              await refresh(user);
+              setStatus("保存しました");
+            } catch (err) {
+              setStatus(err instanceof Error ? err.message : "保存に失敗しました");
+            }
+          }}
+        >
+          保存
+        </button>
+        <button
+          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+          onClick={() => {
+            setDraftName(currentProject ? `${currentProject.name}のコピー` : "無題の作品");
+            setShowSaveAs(true);
+          }}
+        >
+          名前を付けて保存
+        </button>
+      </div>
+
+      {showSaveAs && (
+        <div className="flex gap-1">
+          <input
+            autoFocus
+            className="min-w-0 flex-1 rounded border border-pink/50 px-2 py-1 text-xs text-ink"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter" && draftName.trim()) {
+                await saveAsNew(draftName.trim());
+              } else if (e.key === "Escape") {
+                setShowSaveAs(false);
+              }
+            }}
+          />
+          <button
+            className="rounded bg-pink px-2 py-1 text-xs text-white hover:bg-salmon"
+            onClick={() => draftName.trim() && saveAsNew(draftName.trim())}
+          >
+            保存
+          </button>
+        </div>
+      )}
+
+      {plan !== "premium" && (
+        <p className="text-[11px] leading-relaxed text-ink/40">
+          無料プランは保存{FREE_PLAN_PROJECT_LIMIT}つまでです。
+        </p>
+      )}
+      {status && <p className="text-[11px] text-ink/50">{status}</p>}
+    </>
+  );
+}
+
+function AccountLine({ user }: { user: User | null }) {
+  const plan = useChartStore((s) => s.plan);
+  const setPlan = useChartStore((s) => s.setPlan);
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="mt-1 flex flex-col gap-1 border-t border-peach/40 pt-2 text-[11px]">
+        {magicLinkSent ? (
+          <p className="text-ink/50">メールを確認してリンクをクリックしてください。</p>
+        ) : (
+          <>
+            <span className="text-ink/40">クラウド保存には登録・ログインが必要です</span>
+            <div className="flex gap-1">
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className="min-w-0 flex-1 rounded border border-peach/60 px-2 py-1 text-ink"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button
+                className="shrink-0 rounded bg-pink px-2 py-1 text-white hover:bg-salmon"
+                onClick={async () => {
+                  const supabase = getSupabaseClient();
+                  if (!supabase || !email) return;
+                  setStatus("送信中…");
+                  const { error } = await supabase.auth.signInWithOtp({
+                    email,
+                    options: { emailRedirectTo: window.location.origin },
+                  });
+                  setStatus(error ? error.message : null);
+                  if (!error) setMagicLinkSent(true);
+                }}
+              >
+                ログイン
+              </button>
+            </div>
+          </>
+        )}
+        {status && <p className="text-red-500">{status}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1 flex flex-col gap-1 border-t border-peach/40 pt-2 text-[11px]">
+      <div className="flex items-center justify-between gap-1">
+        <span className="truncate text-ink/50">{user.email}</span>
+        <button
+          className="shrink-0 text-ink/40 hover:underline"
+          onClick={async () => {
+            const supabase = getSupabaseClient();
+            await supabase?.auth.signOut();
+          }}
+        >
+          サインアウト
+        </button>
+      </div>
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-ink/70">
+          プラン: <span className="font-semibold">{plan === "premium" ? "プレミアム" : "無料"}</span>
+        </span>
+        <button
+          className="shrink-0 text-purple-700 underline hover:text-purple-900"
+          title="決済機能はまだないため、テスト用に手動で切り替えられます"
+          onClick={async () => {
+            setStatus(null);
+            try {
+              await setProfilePlanForTesting(user.id, plan === "premium" ? "free" : "premium");
+              setPlan(plan === "premium" ? ("free" as Plan) : ("premium" as Plan));
+            } catch (e) {
+              setStatus(e instanceof Error ? e.message : "プランの切り替えに失敗しました");
+            }
+          }}
+        >
+          {plan === "premium" ? "無料に戻す（テスト）" : "プレミアムにする（テスト）"}
+        </button>
+      </div>
+      {status && <p className="text-ink/50">{status}</p>}
     </div>
   );
 }

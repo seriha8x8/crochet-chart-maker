@@ -8,7 +8,6 @@ import { ProjectPanel } from "@/components/editor/ProjectPanel";
 import { Canvas } from "@/components/editor/Canvas";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { useKeyboardShortcuts } from "@/components/editor/useKeyboardShortcuts";
-import { CloudSyncControl } from "@/components/editor/CloudSyncControl";
 import { useChartStore } from "@/store/chartStore";
 
 export function Editor() {
@@ -32,9 +31,6 @@ export function Editor() {
           <ProjectPanel />
           <SymbolPalette />
           <LayerPanel />
-          <div className="mt-auto border-t border-peach/40 p-3">
-            <CloudSyncControl />
-          </div>
         </aside>
         <main className="min-w-0 flex-1">
           <Canvas />
