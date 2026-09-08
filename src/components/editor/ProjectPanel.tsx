@@ -31,7 +31,9 @@ export function ProjectPanel() {
   const configured = isSupabaseConfigured();
   const [user, setUser] = useState<User | null>(null);
   const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
+  const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
   const setPlan = useChartStore((s) => s.setPlan);
+  const resetProject = useChartStore((s) => s.resetProject);
 
   const refreshAccount = useCallback(
     async (u: User) => {
@@ -64,9 +66,27 @@ export function ProjectPanel() {
 
   return (
     <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
-      <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-semibold text-ink/50">プロジェクト</h2>
+        <button
+          className="text-[11px] text-pink hover:underline"
+          onClick={() => {
+            if (!confirm("新しい編み図を始めます。今のキャンバスの内容は消えますが、保存済みのものはそのまま残ります。よろしいですか？")) return;
+            resetProject();
+            setCurrentCloudProjectId(null);
+          }}
+        >
+          ＋ 新規作成
+        </button>
+      </div>
       {user ? (
-        <CloudProjectSection user={user} cloudProjects={cloudProjects} onRefresh={refreshAccount} />
+        <CloudProjectSection
+          user={user}
+          cloudProjects={cloudProjects}
+          onRefresh={refreshAccount}
+          currentCloudProjectId={currentCloudProjectId}
+          setCurrentCloudProjectId={setCurrentCloudProjectId}
+        />
       ) : (
         <LocalProjectSection />
       )}
@@ -220,13 +240,16 @@ function CloudProjectSection({
   user,
   cloudProjects,
   onRefresh,
+  currentCloudProjectId,
+  setCurrentCloudProjectId,
 }: {
   user: User;
   cloudProjects: CloudProjectSummary[];
   onRefresh: (user: User) => Promise<void>;
+  currentCloudProjectId: string | null;
+  setCurrentCloudProjectId: (id: string | null) => void;
 }) {
   const plan = useChartStore((s) => s.plan);
-  const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
