@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "編み方動画 - rii's crochet tools",
@@ -57,42 +58,10 @@ const CATEGORIES: VideoCategory[] = [
   },
 ];
 
-// TODO: point at the real yarn-management app once it's deployed alongside this one.
-const NAV_LINKS = [
-  { label: "編み方動画", href: "/videos", current: true },
-  { label: "編み図メーカー", href: "/", current: false },
-  { label: "毛糸管理", href: "#", current: false },
-];
-
 export default function VideosPage() {
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "#EAF7F2" }}>
-      <header
-        className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-8"
-        style={{ backgroundColor: "#EAF7F2", borderColor: "#5BC8AC33" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-            style={{ backgroundColor: "#5BC8AC" }}
-          >
-            R
-          </div>
-          <span className="whitespace-nowrap text-base font-semibold text-[#2f6f61]">rii&apos;s crochet tools</span>
-        </div>
-        <nav className="flex gap-4 text-sm sm:gap-6">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="whitespace-nowrap"
-              style={{ color: link.current ? "#5BC8AC" : "#5a6b66", fontWeight: link.current ? 600 : 400 }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-      </header>
+      <SiteHeader current="videos" />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
         {CATEGORIES.map((category) => (

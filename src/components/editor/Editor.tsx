@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Toolbar } from "@/components/editor/Toolbar";
 import { SymbolPalette } from "@/components/editor/SymbolPalette";
 import { LayerPanel } from "@/components/editor/LayerPanel";
@@ -25,6 +26,7 @@ export function Editor() {
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-white text-ink">
+      <SiteHeader current="editor" />
       <Toolbar />
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-peach/40 bg-white">
