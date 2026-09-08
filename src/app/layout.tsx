@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "かぎ針編み図メーカー",
+  title: "rii's crochet tools",
   description: "自由配置で作るかぎ針編みの編み図エディタ",
 };
 

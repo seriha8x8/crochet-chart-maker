@@ -27,7 +27,7 @@ export function Toolbar() {
   return (
     <div className="flex h-12 items-center justify-between border-b border-peach/40 bg-white px-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-ink">かぎ針編み図メーカー</span>
+        <span className="text-sm font-semibold text-ink">rii&apos;s crochet tools</span>
       </div>
 
       <div className="flex items-center gap-2">
