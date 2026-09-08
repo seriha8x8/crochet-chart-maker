@@ -10,7 +10,7 @@ import { UpgradeModal } from "@/components/yarn/UpgradeModal";
 import { YarnPicker } from "@/components/yarn/YarnPicker";
 
 const fieldClass =
-  "rounded-md border border-stone-300 px-3 py-2 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-200";
+  "rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
 
 type SubmitResult = { createdTitle: string } | { saved: true };
 
@@ -90,7 +90,7 @@ export function ProjectForm({
   return (
     <>
       {successMessage && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-[#5BC8AC66] bg-[#EAF7F2] px-4 py-3 text-sm text-[#2f6f61]">
           <span>{successMessage}</span>
           <Link href="/yarn/projects" className="whitespace-nowrap font-medium underline">
             一覧を見る
@@ -133,7 +133,7 @@ export function ProjectForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+          className="rounded-md bg-[#5BC8AC] px-4 py-2 font-medium text-white hover:bg-[#46A68D] disabled:opacity-50"
         >
           {pending ? "保存中..." : "保存"}
         </button>

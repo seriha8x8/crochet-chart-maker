@@ -13,7 +13,7 @@ export function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => 
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 w-full rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+          className="mt-4 w-full rounded-md bg-[#5BC8AC] px-4 py-2 text-sm font-medium text-white hover:bg-[#46A68D]"
         >
           閉じる
         </button>

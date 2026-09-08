@@ -10,7 +10,7 @@ import { listYarns, type YarnFacets } from "@/lib/yarn/data";
 import type { Yarn } from "@/lib/yarn/types";
 
 const selectClass =
-  "rounded-md border border-stone-300 px-2 py-1.5 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-200";
+  "rounded-md border border-stone-300 px-2 py-1.5 text-sm focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
 
 const FILTER_KEYS = ["q", "color", "manufacturer", "material", "thickness"] as const;
 
@@ -61,10 +61,10 @@ function YarnsListContent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="border-l-4 border-rose-400 pl-3 text-xl font-semibold">毛糸一覧</h1>
+        <h1 className="border-l-4 border-[#5BC8AC] pl-3 text-xl font-semibold">毛糸一覧</h1>
         <Link
           href="/yarn/yarns/new"
-          className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+          className="rounded-md bg-[#5BC8AC] px-4 py-2 text-sm font-medium text-white hover:bg-[#46A68D]"
         >
           + 毛糸を登録
         </Link>
@@ -127,11 +127,11 @@ function YarnsListContent() {
         </label>
         <button
           type="submit"
-          className="rounded-md border border-pink-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-pink-50"
+          className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
         >
           絞り込む
         </button>
-        <Link href="/yarn/yarns" className="text-sm text-rose-600 underline">
+        <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
           リセット
         </Link>
       </form>
@@ -148,7 +148,7 @@ function YarnsListContent() {
             <li key={yarn.id}>
               <Link
                 href={`/yarn/yarns/detail?id=${yarn.id}`}
-                className="flex flex-col gap-2 rounded-lg border border-rose-100 p-4 hover:border-rose-300 hover:bg-rose-50/70"
+                className="flex flex-col gap-2 rounded-lg border border-[#5BC8AC26] bg-white p-4 hover:border-[#5BC8AC66] hover:bg-[#D8F0E8]/70"
               >
                 {yarn.photo_url && supabase ? (
                   // eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available
@@ -158,7 +158,7 @@ function YarnsListContent() {
                     className="h-32 w-full rounded-md object-cover"
                   />
                 ) : (
-                  <div className="flex h-32 w-full items-center justify-center rounded-md bg-pink-50 text-xs text-stone-400">
+                  <div className="flex h-32 w-full items-center justify-center rounded-md bg-[#D8F0E8] text-xs text-stone-400">
                     写真なし
                   </div>
                 )}
@@ -167,12 +167,12 @@ function YarnsListContent() {
                   {[yarn.color, yarn.manufacturer, yarn.material, yarn.thickness]
                     .filter(Boolean)
                     .map((tag) => (
-                      <span key={tag} className="rounded-full bg-pink-100 px-2 py-0.5 text-xs text-stone-700">
+                      <span key={tag} className="rounded-full bg-[#D8F0E8] px-2 py-0.5 text-xs text-stone-700">
                         {tag}
                       </span>
                     ))}
                 </div>
-                <span className="w-fit rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                <span className="w-fit rounded-full bg-[#FCE7EA] px-2 py-0.5 text-xs font-medium text-[#B2536D]">
                   在庫: {yarn.stock_count}玉
                 </span>
               </Link>

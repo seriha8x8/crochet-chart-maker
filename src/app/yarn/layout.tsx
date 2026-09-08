@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function YarnLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col" style={{ backgroundColor: "#EAF7F2" }}>
       <SiteHeader current="yarn" />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
     </div>

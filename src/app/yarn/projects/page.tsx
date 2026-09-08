@@ -32,10 +32,10 @@ function ProjectsListContent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="border-l-4 border-rose-400 pl-3 text-xl font-semibold">作品メモ一覧</h1>
+        <h1 className="border-l-4 border-[#5BC8AC] pl-3 text-xl font-semibold">作品メモ一覧</h1>
         <Link
           href="/yarn/projects/new"
-          className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+          className="rounded-md bg-[#5BC8AC] px-4 py-2 text-sm font-medium text-white hover:bg-[#46A68D]"
         >
           + 作品メモを登録
         </Link>
@@ -53,7 +53,7 @@ function ProjectsListContent() {
             <li key={project.id}>
               <Link
                 href={`/yarn/projects/detail?id=${project.id}`}
-                className="flex flex-col gap-2 rounded-lg border border-rose-100 p-4 hover:border-rose-300 hover:bg-rose-50/70"
+                className="flex flex-col gap-2 rounded-lg border border-[#5BC8AC26] bg-white p-4 hover:border-[#5BC8AC66] hover:bg-[#D8F0E8]/70"
               >
                 {project.photo_url && supabase ? (
                   // eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available
@@ -63,13 +63,13 @@ function ProjectsListContent() {
                     className="h-32 w-full rounded-md object-cover"
                   />
                 ) : (
-                  <div className="flex h-32 w-full items-center justify-center rounded-md bg-pink-50 text-xs text-stone-400">
+                  <div className="flex h-32 w-full items-center justify-center rounded-md bg-[#D8F0E8] text-xs text-stone-400">
                     写真なし
                   </div>
                 )}
                 <span className="font-medium">{project.title}</span>
                 {project.made_on && (
-                  <span className="w-fit rounded-full bg-pink-100 px-2 py-0.5 text-xs text-stone-700">
+                  <span className="w-fit rounded-full bg-[#D8F0E8] px-2 py-0.5 text-xs text-stone-700">
                     {project.made_on}
                   </span>
                 )}

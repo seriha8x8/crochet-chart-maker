@@ -90,7 +90,7 @@ function ProjectDetailContent() {
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="border-l-4 border-pink-300 pl-3 text-lg font-semibold">使用した毛糸</h2>
+        <h2 className="border-l-4 border-[#F18D9E] pl-3 text-lg font-semibold">使用した毛糸</h2>
         {usages.length === 0 ? (
           <p className="text-sm text-stone-500">使用した毛糸がありません。</p>
         ) : (
@@ -99,13 +99,13 @@ function ProjectDetailContent() {
               <li key={usage.id}>
                 <Link
                   href={`/yarn/yarns/detail?id=${usage.yarn?.id}`}
-                  className="flex items-center justify-between rounded-md border border-rose-100 px-4 py-3 hover:border-rose-300 hover:bg-rose-50/70"
+                  className="flex items-center justify-between rounded-md border border-[#5BC8AC26] bg-white px-4 py-3 hover:border-[#5BC8AC66] hover:bg-[#D8F0E8]/70"
                 >
                   <span>
                     {usage.yarn?.name}
                     {usage.yarn?.manufacturer ? ` (${usage.yarn.manufacturer})` : ""}
                   </span>
-                  <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                  <span className="rounded-full bg-[#FCE7EA] px-2 py-0.5 text-xs font-medium text-[#B2536D]">
                     使用: {usage.used_count}玉
                   </span>
                 </Link>

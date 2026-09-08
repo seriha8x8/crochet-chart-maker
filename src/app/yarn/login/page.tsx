@@ -69,12 +69,12 @@ export default function YarnLoginPage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-16">
       <h1 className="text-2xl font-semibold">毛糸管理アプリ</h1>
-      <div className="mx-auto flex w-full max-w-sm flex-col gap-6 rounded-lg border border-stone-200 p-8">
+      <div className="mx-auto flex w-full max-w-sm flex-col gap-6 rounded-lg border border-[#5BC8AC33] bg-white p-8">
         <div className="flex gap-2 text-sm">
           <button
             type="button"
             className={`flex-1 rounded-md px-3 py-2 font-medium ${
-              mode === "signin" ? "bg-rose-600 text-white" : "bg-pink-100 text-stone-700"
+              mode === "signin" ? "bg-[#5BC8AC] text-white" : "bg-[#EAF7F2] text-stone-700"
             }`}
             onClick={() => {
               setMode("signin");
@@ -87,7 +87,7 @@ export default function YarnLoginPage() {
           <button
             type="button"
             className={`flex-1 rounded-md px-3 py-2 font-medium ${
-              mode === "signup" ? "bg-rose-600 text-white" : "bg-pink-100 text-stone-700"
+              mode === "signup" ? "bg-[#5BC8AC] text-white" : "bg-[#EAF7F2] text-stone-700"
             }`}
             onClick={() => {
               setMode("signup");
@@ -108,7 +108,7 @@ export default function YarnLoginPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-md border border-stone-300 px-3 py-2 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -120,7 +120,7 @@ export default function YarnLoginPage() {
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-md border border-stone-300 px-3 py-2 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]"
             />
           </label>
 
@@ -130,7 +130,7 @@ export default function YarnLoginPage() {
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+            className="rounded-md bg-[#5BC8AC] px-4 py-2 font-medium text-white hover:bg-[#46A68D] disabled:opacity-50"
           >
             {pending ? "処理中..." : mode === "signin" ? "ログイン" : "アカウント作成"}
           </button>
