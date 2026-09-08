@@ -88,7 +88,13 @@ export function CloudSyncControl() {
                 const supabase = getSupabaseClient();
                 if (!supabase || !email) return;
                 setStatus("送信中…");
-                const { error } = await supabase.auth.signInWithOtp({ email });
+                // This Supabase project is shared with another app, whose own URL is very
+                // likely what's configured as the project's default Auth redirect — without
+                // this, the magic link would send people there instead of back here.
+                const { error } = await supabase.auth.signInWithOtp({
+                  email,
+                  options: { emailRedirectTo: window.location.origin },
+                });
                 setStatus(error ? error.message : null);
                 if (!error) setMagicLinkSent(true);
               }}
