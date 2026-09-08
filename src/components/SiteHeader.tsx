@@ -1,7 +1,7 @@
 const NAV_LINKS = [
   { label: "編み方動画", href: "/videos", key: "videos" },
   { label: "編み図メーカー", href: "/", key: "editor" },
-  { label: "毛糸管理", href: "#", key: "yarn" },
+  { label: "毛糸管理", href: "/yarn/yarns", key: "yarn" },
 ] as const;
 
 type NavKey = (typeof NAV_LINKS)[number]["key"];
