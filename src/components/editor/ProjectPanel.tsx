@@ -32,6 +32,7 @@ export function ProjectPanel() {
   const [user, setUser] = useState<User | null>(null);
   const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
   const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
+  const [isRecovery, setIsRecovery] = useState(false);
   const setPlan = useChartStore((s) => s.setPlan);
   const resetProject = useChartStore((s) => s.resetProject);
 
@@ -52,8 +53,13 @@ export function ProjectPanel() {
       setUser(data.user ?? null);
       if (data.user) refreshAccount(data.user);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      // Clicking a password-reset email link signs the browser in transiently just so
+      // updateUser({ password }) can be called — that's not "really" being logged in, so
+      // this takes over the whole panel with a "set a new password" form instead of
+      // showing the normal (now technically authenticated) project view underneath it.
+      if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
       if (session?.user) {
         refreshAccount(session.user);
       } else {
@@ -63,6 +69,15 @@ export function ProjectPanel() {
     });
     return () => sub.subscription.unsubscribe();
   }, [configured, setPlan, refreshAccount]);
+
+  if (isRecovery) {
+    return (
+      <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
+        <h2 className="text-xs font-semibold text-ink/50">新しいパスワードを設定</h2>
+        <PasswordRecoveryForm onDone={() => setIsRecovery(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
@@ -446,46 +461,106 @@ function CloudProjectSection({
   );
 }
 
+type AuthMode = "signin" | "signup" | "forgot";
+
 function AccountLine({ user }: { user: User | null }) {
   const plan = useChartStore((s) => s.plan);
   const setPlan = useChartStore((s) => s.setPlan);
+  const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
 
   if (!user) {
+    const submit = async () => {
+      const supabase = getSupabaseClient();
+      if (!supabase || !email) return;
+      setStatus(null);
+      setInfo(null);
+      if (mode === "forgot") {
+        setStatus("送信中…");
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        });
+        setStatus(error ? error.message : null);
+        if (!error) setInfo("パスワード再設定用のメールを送信しました。メール内のリンクから新しいパスワードを設定してください。");
+        return;
+      }
+      if (!password) return;
+      setStatus(mode === "signup" ? "登録中…" : "ログイン中…");
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        setStatus(error ? error.message : null);
+        if (!error) setInfo("確認メールを送信しました。メール内のリンクをクリックすると登録が完了します。");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        setStatus(error ? error.message : null);
+      }
+    };
+
     return (
       <div className="mt-1 flex flex-col gap-1 border-t border-peach/40 pt-2 text-[11px]">
-        {magicLinkSent ? (
-          <p className="text-ink/50">メールを確認してリンクをクリックしてください。</p>
+        <div className="flex gap-2 text-ink/50">
+          <button
+            className={mode === "signin" ? "font-semibold text-ink" : "hover:underline"}
+            onClick={() => {
+              setMode("signin");
+              setStatus(null);
+              setInfo(null);
+            }}
+          >
+            ログイン
+          </button>
+          <button
+            className={mode === "signup" ? "font-semibold text-ink" : "hover:underline"}
+            onClick={() => {
+              setMode("signup");
+              setStatus(null);
+              setInfo(null);
+            }}
+          >
+            新規登録
+          </button>
+        </div>
+        {info ? (
+          <p className="text-ink/50">{info}</p>
         ) : (
           <>
-            <span className="text-ink/40">クラウド保存には登録・ログインが必要です</span>
-            <div className="flex gap-1">
+            <input
+              type="email"
+              placeholder="you@example.com"
+              className="rounded border border-peach/60 px-2 py-1 text-ink"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {mode !== "forgot" && (
               <input
-                type="email"
-                placeholder="you@example.com"
-                className="min-w-0 flex-1 rounded border border-peach/60 px-2 py-1 text-ink"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                placeholder="パスワード"
+                className="rounded border border-peach/60 px-2 py-1 text-ink"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
               />
-              <button
-                className="shrink-0 rounded bg-pink px-2 py-1 text-white hover:bg-salmon"
-                onClick={async () => {
-                  const supabase = getSupabaseClient();
-                  if (!supabase || !email) return;
-                  setStatus("送信中…");
-                  const { error } = await supabase.auth.signInWithOtp({
-                    email,
-                    options: { emailRedirectTo: window.location.origin },
-                  });
-                  setStatus(error ? error.message : null);
-                  if (!error) setMagicLinkSent(true);
-                }}
-              >
-                ログイン
+            )}
+            <button className="rounded bg-pink px-2 py-1 text-white hover:bg-salmon" onClick={submit}>
+              {mode === "signup" ? "登録する" : mode === "forgot" ? "再設定メールを送る" : "ログイン"}
+            </button>
+            {mode === "signin" && (
+              <button className="self-start text-ink/40 hover:underline" onClick={() => setMode("forgot")}>
+                パスワードをお忘れですか？
               </button>
-            </div>
+            )}
+            {mode === "forgot" && (
+              <button className="self-start text-ink/40 hover:underline" onClick={() => setMode("signin")}>
+                ログインに戻る
+              </button>
+            )}
           </>
         )}
         {status && <p className="text-red-500">{status}</p>}
@@ -528,6 +603,43 @@ function AccountLine({ user }: { user: User | null }) {
         </button>
       </div>
       {status && <p className="text-ink/50">{status}</p>}
+    </div>
+  );
+}
+
+function PasswordRecoveryForm({ onDone }: { onDone: () => void }) {
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+
+  const submit = async () => {
+    const supabase = getSupabaseClient();
+    if (!supabase || password.length < 6) {
+      setStatus("6文字以上のパスワードを入力してください。");
+      return;
+    }
+    setStatus("変更中…");
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    onDone();
+  };
+
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <input
+        type="password"
+        placeholder="新しいパスワード（6文字以上）"
+        className="rounded border border-peach/60 px-2 py-1 text-ink"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
+      />
+      <button className="rounded bg-pink px-2 py-1 text-white hover:bg-salmon" onClick={submit}>
+        変更する
+      </button>
+      {status && <p className="text-[11px] text-red-500">{status}</p>}
     </div>
   );
 }
