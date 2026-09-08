@@ -53,7 +53,7 @@ export function RequireYarnUser({ children }: { children: ReactNode }) {
 
   return (
     <YarnUserContext.Provider value={user}>
-      <YarnAppHeader user={user} />
+      <YarnAppHeader />
       {children}
     </YarnUserContext.Provider>
   );

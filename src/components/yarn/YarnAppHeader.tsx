@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@/lib/supabase/client";
 
-export function YarnAppHeader({ user }: { user: User }) {
+export function YarnAppHeader() {
   const pathname = usePathname();
 
   return (
     <header className="border-b border-[#5BC8AC33]">
       <div className="h-1 bg-gradient-to-r from-[#5BC8AC] via-[#98DBC6] to-[#F18D9E]" />
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
         <nav className="flex items-center gap-4 text-sm font-medium">
           <Link
             href="/yarn/yarns"
@@ -26,19 +24,6 @@ export function YarnAppHeader({ user }: { user: User }) {
             作品メモ
           </Link>
         </nav>
-        <div className="flex items-center gap-3 text-sm text-stone-500">
-          <span className="hidden sm:inline">{user.email}</span>
-          <button
-            type="button"
-            className="hover:underline"
-            onClick={async () => {
-              const supabase = getSupabaseClient();
-              await supabase?.auth.signOut();
-            }}
-          >
-            ログアウト
-          </button>
-        </div>
       </div>
     </header>
   );
