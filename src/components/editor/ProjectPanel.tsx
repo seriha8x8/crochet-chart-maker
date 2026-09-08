@@ -92,7 +92,7 @@ export function ProjectPanel() {
         <button
           className="text-[11px] text-pink hover:underline disabled:cursor-not-allowed disabled:text-ink/30 disabled:no-underline"
           disabled={atProjectLimit}
-          title={atProjectLimit ? `無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでのため、新しく始めることはできません。既存のプロジェクトを削除するか、プレミアムにアップグレードしてください。` : undefined}
+          title={atProjectLimit ? `無料プランは${FREE_PLAN_PROJECT_LIMIT}つまで保存可能なため、新しく始めることはできません。既存のプロジェクトを削除してください。（プレミアムプラン※準備中）` : undefined}
           onClick={() => {
             if (!confirm("新しい編み図を始めます。今のキャンバスの内容は消えますが、保存済みのものはそのまま残ります。よろしいですか？")) return;
             resetProject();
@@ -309,7 +309,7 @@ function CloudProjectSection({
       setStatus("保存しました");
     } catch (e) {
       if (e instanceof ProjectLimitError) {
-        setStatus(`無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでです。プレミアムにアップグレードすると無制限に保存できます。`);
+        setStatus(`無料プランは${FREE_PLAN_PROJECT_LIMIT}つまで保存可能です。（プレミアムプラン※準備中）`);
       } else {
         setStatus(e instanceof Error ? e.message : "保存に失敗しました");
       }
@@ -430,7 +430,7 @@ function CloudProjectSection({
         <button
           className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={atProjectLimit}
-          title={atProjectLimit ? `無料プランは保存${FREE_PLAN_PROJECT_LIMIT}つまでです。` : undefined}
+          title={atProjectLimit ? `無料プランは${FREE_PLAN_PROJECT_LIMIT}つまで保存可能です。（プレミアムプラン※準備中）` : undefined}
           onClick={() => {
             setDraftName(currentProject ? `${currentProject.name}のコピー` : "無題の作品");
             setShowSaveAs(true);
@@ -466,7 +466,7 @@ function CloudProjectSection({
 
       {plan !== "premium" && (
         <p className="text-[11px] leading-relaxed text-ink/40">
-          無料プランは保存{FREE_PLAN_PROJECT_LIMIT}つまでです。
+          無料プランは{FREE_PLAN_PROJECT_LIMIT}つまで保存可能です。（プレミアムプラン※準備中）
         </p>
       )}
       {status && <p className="text-[11px] text-ink/50">{status}</p>}

@@ -30,7 +30,7 @@ function ColorField({
       <div className="flex flex-col gap-1 text-xs text-ink/70">
         <div className="flex items-center gap-1.5">
           <span>色</span>
-          <span className="rounded bg-peach/30 px-1.5 py-0.5 text-[10px] text-ink/50">プレミアム限定</span>
+          <span className="rounded bg-peach/30 px-1.5 py-0.5 text-[10px] text-ink/50">プレミアムプラン※準備中</span>
         </div>
         {color && (
           <button className="self-start text-[11px] text-ink/40 hover:text-pink" onClick={onReset}>
