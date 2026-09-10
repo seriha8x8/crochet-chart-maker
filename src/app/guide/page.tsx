@@ -7,9 +7,9 @@ export const metadata: Metadata = {
 };
 
 const TOC = [
+  { href: "#videos", label: "編み方動画" },
   { href: "#editor", label: "編み図メーカー" },
   { href: "#yarn", label: "毛糸管理" },
-  { href: "#videos", label: "編み方動画" },
 ] as const;
 
 export default function GuidePage() {
@@ -39,6 +39,15 @@ export default function GuidePage() {
             </a>
           ))}
         </nav>
+
+        <GuideSection id="videos" title="編み方動画" intro="基本の編み方から増し目・減らし目、応用の編み方まで、カテゴリ別に動画で解説しています。">
+          <GuideImage src="/guide/videos-categories.png" alt="編み方動画のカテゴリ一覧" />
+          <div className="rounded-2xl bg-white p-5 text-center" style={{ border: "1px solid #CDEBE1" }}>
+            <p className="text-sm font-medium leading-relaxed" style={{ color: "#3D6B5C" }}>
+              カテゴリから気になる編み方を探して、動画を見て実践してみよう！
+            </p>
+          </div>
+        </GuideSection>
 
         <GuideSection id="editor" title="編み図メーカー" intro="かぎ針編みの編み図を、ブラウザ上で作成できるツールです。">
           <GuideImage src="/guide/toolbar.png" alt="編み図メーカーのツールバー" />
@@ -86,13 +95,6 @@ export default function GuidePage() {
           <Feature title="編んだ作品をメモする">
             使った毛糸と紐づけて、編んだ作品の記録をメモとして残せます。過去にどの毛糸で何を作ったかを振り返るのに便利です。
           </Feature>
-        </GuideSection>
-
-        <GuideSection id="videos" title="編み方動画" intro="基本の編み方から増し目・減らし目、応用の編み方まで、カテゴリ別に動画で解説しています。">
-          <GuideImage src="/guide/videos-categories.png" alt="編み方動画のカテゴリ一覧" />
-          <p className="mt-6 text-center text-sm font-medium leading-relaxed" style={{ color: "#3D6B5C" }}>
-            カテゴリから気になる編み方を探して、動画を見て実践してみよう！
-          </p>
         </GuideSection>
       </main>
 

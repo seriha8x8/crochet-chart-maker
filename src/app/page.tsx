@@ -3,6 +3,16 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 const TOOLS = [
   {
+    key: "videos",
+    title: "編み方動画",
+    description: "基本から応用まで動画で解説",
+    buttonLabel: "編み方を見る",
+    href: "/videos",
+    iconBg: "#FDF6D8",
+    iconColor: "#D4C220",
+    icon: <PlayIcon />,
+  },
+  {
     key: "editor",
     title: "編み図メーカー",
     description: "かぎ針編みの編み図を作成",
@@ -21,16 +31,6 @@ const TOOLS = [
     iconBg: "#FCE7EA",
     iconColor: "#F18D9E",
     icon: <YarnIcon />,
-  },
-  {
-    key: "videos",
-    title: "編み方動画",
-    description: "基本から応用まで動画で解説",
-    buttonLabel: "編み方を見る",
-    href: "/videos",
-    iconBg: "#FDF6D8",
-    iconColor: "#D4C220",
-    icon: <PlayIcon />,
   },
 ] as const;
 
