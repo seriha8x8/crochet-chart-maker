@@ -136,7 +136,6 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
-  const [limitMessage, setLimitMessage] = useState(false);
 
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const sortedProjects = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -146,11 +145,6 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
   const flashSaved = () => {
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
-  };
-
-  const flashLimitReached = () => {
-    setLimitMessage(true);
-    setTimeout(() => setLimitMessage(false), 3000);
   };
 
   const commitRename = () => {
@@ -223,11 +217,7 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
           disabled={savingWouldCreateNew && atProjectLimit}
           title={savingWouldCreateNew && atProjectLimit ? `保存は${FREE_PLAN_PROJECT_LIMIT}つまでです。（プレミアムプラン※準備中）` : undefined}
           onClick={() => {
-            if (saveCurrentProject()) {
-              flashSaved();
-            } else {
-              flashLimitReached();
-            }
+            if (saveCurrentProject()) flashSaved();
           }}
         >
           {savedFlash ? "保存しました" : "保存"}
@@ -245,11 +235,7 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
         </button>
       </div>
 
-      {limitMessage && (
-        <p className="text-[11px] leading-relaxed text-ink/40">
-          保存は{FREE_PLAN_PROJECT_LIMIT}つまでです。（プレミアムプラン※準備中）
-        </p>
-      )}
+      <p className="text-[11px] leading-relaxed text-ink/40">ローカル保存は{FREE_PLAN_PROJECT_LIMIT}つまで可能です。</p>
 
       {showSaveAs && (
         <div className="flex gap-1">
@@ -261,7 +247,6 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
             onKeyDown={(e) => {
               if (e.key === "Enter" && draftName.trim()) {
                 if (saveProjectAs(draftName.trim())) setShowSaveAs(false);
-                else flashLimitReached();
               } else if (e.key === "Escape") {
                 setShowSaveAs(false);
               }
@@ -272,7 +257,6 @@ function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
             onClick={() => {
               if (draftName.trim()) {
                 if (saveProjectAs(draftName.trim())) setShowSaveAs(false);
-                else flashLimitReached();
               }
             }}
           >
