@@ -99,6 +99,9 @@ export default function HomePage() {
               <p className="text-sm leading-relaxed" style={{ color: "#7FA99A" }}>
                 {tool.description}
               </p>
+              <a href={`/guide#${tool.key}`} className="text-xs underline" style={{ color: tool.iconColor }}>
+                使い方を見る
+              </a>
               <a
                 href={tool.href}
                 className="mt-2 whitespace-nowrap rounded-full px-5 py-2 text-sm font-medium text-white"
