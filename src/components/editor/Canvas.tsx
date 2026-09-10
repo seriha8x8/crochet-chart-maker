@@ -436,6 +436,40 @@ export function Canvas() {
     return { bbox: { x: minX, y: minY, w: maxX - minX, h: maxY - minY }, pivot, isGroup };
   }, [selectedIds, symbolById]);
 
+  // When several selected symbols all come out of the exact same parent symbol(s) — e.g. an
+  // increase, several stitches worked into one stitch below — each would otherwise draw its own
+  // selection ring right on top of its siblings. Merge those into a single ring per shared-parent
+  // cluster instead; symbols outside such a cluster keep their own individual ring.
+  const sharedParentRings = useMemo(() => {
+    if (selectedIds.length < 2) return { rings: [] as { cx: number; cy: number; r: number }[], suppressed: new Set<string>() };
+    const selected = selectedIds.map((id) => symbolById.get(id)).filter((s): s is ChartSymbol => !!s);
+    const clusters = new Map<string, ChartSymbol[]>();
+    for (const s of selected) {
+      if (s.parentIds.length === 0) continue;
+      const key = [...s.parentIds].sort().join("|");
+      const members = clusters.get(key) ?? [];
+      members.push(s);
+      clusters.set(key, members);
+    }
+    const rings: { cx: number; cy: number; r: number }[] = [];
+    const suppressed = new Set<string>();
+    for (const members of clusters.values()) {
+      if (members.length < 2) continue;
+      const heads = members.map((s) => ({ x: s.x, y: s.y - getSymbolHeight(s) / 2 }));
+      const cx = heads.reduce((sum, p) => sum + p.x, 0) / heads.length;
+      const cy = heads.reduce((sum, p) => sum + p.y, 0) / heads.length;
+      let r = 0;
+      members.forEach((s, i) => {
+        const def = SYMBOL_DEFS[s.type];
+        const memberR = Math.max(def.width, getSymbolHeight(s), 16) / 2 + 7;
+        r = Math.max(r, Math.hypot(heads[i].x - cx, heads[i].y - cy) + memberR);
+        suppressed.add(s.id);
+      });
+      rings.push({ cx, cy, r: r + 2 });
+    }
+    return { rings, suppressed };
+  }, [selectedIds, symbolById]);
+
   // startScreen/currentScreen are viewport-relative (clientX/Y); the overlay div is
   // absolutely positioned inside the canvas container, so offset by the container's
   // own position or the box is drawn away from the cursor.
@@ -525,7 +559,7 @@ export function Canvas() {
                 style={{ cursor: parentLinkTargetId ? "pointer" : "grab" }}
               >
                 <circle cx={0} cy={-height / 2} r={hitR} fill="transparent" />
-                {(isSelected || isHighlighted || isLinkTarget || isLinkedParent) && (
+                {((isSelected && !sharedParentRings.suppressed.has(symbol.id)) || isHighlighted || isLinkTarget || isLinkedParent) && (
                   <circle
                     cx={0}
                     cy={-height / 2}
@@ -553,6 +587,20 @@ export function Canvas() {
               </g>
             );
           })}
+
+          {sharedParentRings.rings.map((ring, i) => (
+            <circle
+              key={i}
+              cx={ring.cx}
+              cy={ring.cy}
+              r={ring.r}
+              fill="none"
+              stroke="#f57799"
+              strokeWidth={1.5}
+              opacity={0.6}
+              pointerEvents="none"
+            />
+          ))}
 
           {selectedSymbol && !parentLinkTargetId && (
             <RotateHandle symbol={selectedSymbol} onPointerDown={onRotateHandlePointerDown} />
