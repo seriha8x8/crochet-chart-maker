@@ -502,9 +502,7 @@ function AccountLine({ user }: { user: User | null }) {
       if (mode === "forgot") {
         setStatus("送信中…");
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          // The "set a new password" recovery UI only exists on this editor page, so send
-          // the reset link's redirect here explicitly rather than the site's home page.
-          redirectTo: `${window.location.origin}/editor`,
+          redirectTo: `${window.location.origin}/reset-password`,
         });
         setStatus(error ? error.message : null);
         if (!error) setInfo("パスワード再設定用のメールを送信しました。メール内のリンクから新しいパスワードを設定してください。");

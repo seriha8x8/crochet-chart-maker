@@ -90,10 +90,8 @@ function LoginPopover({ onClose }: { onClose: () => void }) {
 
     if (mode === "forgot") {
       setPending(true);
-      // The "set a new password" recovery UI only exists on the editor page, so send the
-      // reset link's redirect there explicitly rather than the site's home page.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/editor`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       setPending(false);
       if (error) {
