@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import {
@@ -28,11 +29,11 @@ function formatDate(iso: string) {
  *  the account's cloud list once signed in — never both, so there's no "which list is this"
  *  confusion between two separately-saved sets of projects. */
 export function ProjectPanel() {
+  const router = useRouter();
   const configured = isSupabaseConfigured();
   const [user, setUser] = useState<User | null>(null);
   const [cloudProjects, setCloudProjects] = useState<CloudProjectSummary[]>([]);
   const [currentCloudProjectId, setCurrentCloudProjectId] = useState<string | null>(null);
-  const [isRecovery, setIsRecovery] = useState(false);
   const plan = useChartStore((s) => s.plan);
   const setPlan = useChartStore((s) => s.setPlan);
   const resetProject = useChartStore((s) => s.resetProject);
@@ -56,12 +57,15 @@ export function ProjectPanel() {
       if (data.user) refreshAccount(data.user);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Old password-reset emails (sent before /reset-password existed) still link here —
+      // hand off to the dedicated reset page instead of keeping a second copy of that form.
+      // The temporary recovery session Supabase just established is persisted, so the
+      // reset page picks it up on load.
+      if (event === "PASSWORD_RECOVERY") {
+        router.replace("/reset-password");
+        return;
+      }
       setUser(session?.user ?? null);
-      // Clicking a password-reset email link signs the browser in transiently just so
-      // updateUser({ password }) can be called — that's not "really" being logged in, so
-      // this takes over the whole panel with a "set a new password" form instead of
-      // showing the normal (now technically authenticated) project view underneath it.
-      if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
       if (session?.user) {
         refreshAccount(session.user);
       } else {
@@ -70,16 +74,7 @@ export function ProjectPanel() {
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [configured, setPlan, refreshAccount]);
-
-  if (isRecovery) {
-    return (
-      <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
-        <h2 className="text-xs font-semibold text-ink/50">新しいパスワードを設定</h2>
-        <PasswordRecoveryForm onDone={() => setIsRecovery(false)} />
-      </div>
-    );
-  }
+  }, [configured, setPlan, refreshAccount, router]);
 
   // A free-plan user (cloud) or a signed-out visitor (local) at their save limit can't create
   // a 4th project even temporarily/unsaved — otherwise the limit is really "3 saved + 1
@@ -628,39 +623,3 @@ function AccountLine({ user }: { user: User | null }) {
   );
 }
 
-function PasswordRecoveryForm({ onDone }: { onDone: () => void }) {
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
-
-  const submit = async () => {
-    const supabase = getSupabaseClient();
-    if (!supabase || password.length < 6) {
-      setStatus("6文字以上のパスワードを入力してください。");
-      return;
-    }
-    setStatus("変更中…");
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setStatus(error.message);
-      return;
-    }
-    onDone();
-  };
-
-  return (
-    <div className="flex flex-col gap-1 text-xs">
-      <input
-        type="password"
-        placeholder="新しいパスワード（6文字以上）"
-        className="rounded border border-peach/60 px-2 py-1 text-ink"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit()}
-      />
-      <button className="rounded bg-pink px-2 py-1 text-white hover:bg-salmon" onClick={submit}>
-        変更する
-      </button>
-      {status && <p className="text-[11px] text-red-500">{status}</p>}
-    </div>
-  );
-}
