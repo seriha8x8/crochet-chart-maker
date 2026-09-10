@@ -18,6 +18,8 @@ export function Toolbar() {
   const redo = useChartStore((s) => s.redo);
   const canUndo = useChartStore((s) => s.past.length > 0);
   const canRedo = useChartStore((s) => s.future.length > 0);
+  const plan = useChartStore((s) => s.plan);
+  const isPremium = plan === "premium";
 
   const [showGuidePopover, setShowGuidePopover] = useState(false);
   const [showRoundDialog, setShowRoundDialog] = useState(false);
@@ -140,14 +142,21 @@ export function Toolbar() {
           輪の等分配置…
         </button>
 
-        <button
-          className="rounded-md bg-pink px-3 py-1.5 text-sm text-white hover:bg-salmon"
-          onClick={() => {
-            if (exportRef.current) downloadSvgAsPng(exportRef.current, "crochet-chart.png", 2);
-          }}
-        >
-          PNG書き出し
-        </button>
+        <div className="flex flex-col items-center gap-0.5">
+          <button
+            className="rounded-md bg-pink px-3 py-1.5 text-sm text-white hover:bg-salmon"
+            onClick={() => {
+              if (exportRef.current) downloadSvgAsPng(exportRef.current, "crochet-chart.png", 2, !isPremium);
+            }}
+          >
+            PNG書き出し
+          </button>
+          {!isPremium && (
+            <span className="whitespace-nowrap text-[10px] text-ink/40" title="プレミアムプラン※準備中で透かしなしに">
+              透かし入り
+            </span>
+          )}
+        </div>
 
         <button
           className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"

@@ -77,7 +77,7 @@ export default function GuidePage() {
           </Feature>
 
           <Feature title="画像書き出し">
-            作成した編み図をPNG画像として書き出せます。保存しておいたり、SNSでシェアしたりするのに使えます。
+            作成した編み図をPNG画像として書き出せます。保存しておいたり、SNSでシェアしたりするのに使えます。無料プランでの書き出しには透かしが入ります（プレミアムプラン※準備中で透かしなしに）。
           </Feature>
 
           <p className="mt-6 rounded-lg px-4 py-3 text-xs leading-relaxed" style={{ backgroundColor: "#FFF7EC", color: "#8a7150" }}>

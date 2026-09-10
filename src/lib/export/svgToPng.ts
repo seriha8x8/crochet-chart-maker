@@ -1,4 +1,29 @@
-export function downloadSvgAsPng(svgEl: SVGSVGElement, filename: string, scale = 2) {
+/** Tiled diagonal watermark drawn over free-plan exports; premium removes it. */
+function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  const text = "rii's crochet tools";
+  const fontSize = Math.max(14, Math.round(Math.min(width, height) / 22));
+
+  ctx.save();
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.fillStyle = "rgba(61, 107, 92, 0.16)";
+  ctx.textBaseline = "middle";
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate((-30 * Math.PI) / 180);
+
+  const textWidth = ctx.measureText(text).width;
+  const stepX = textWidth + fontSize * 3;
+  const stepY = fontSize * 5;
+  const diag = Math.hypot(width, height);
+
+  for (let y = -diag; y < diag; y += stepY) {
+    for (let x = -diag; x < diag; x += stepX) {
+      ctx.fillText(text, x, y);
+    }
+  }
+  ctx.restore();
+}
+
+export function downloadSvgAsPng(svgEl: SVGSVGElement, filename: string, scale = 2, watermark = false) {
   const clone = svgEl.cloneNode(true) as SVGSVGElement;
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   // The source element is kept off-screen via inline `position:fixed; left:-99999px`.
@@ -28,6 +53,7 @@ export function downloadSvgAsPng(svgEl: SVGSVGElement, filename: string, scale =
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (watermark) drawWatermark(ctx, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
 
     canvas.toBlob((blob) => {
