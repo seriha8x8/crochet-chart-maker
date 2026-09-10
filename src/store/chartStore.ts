@@ -12,7 +12,7 @@ import type {
 } from "@/types/chart";
 import { getFootPoint, getHeadPoint, centroid, type Point } from "@/lib/symbols/geometry";
 import { SYMBOL_DEFS } from "@/lib/symbols/definitions";
-import type { Plan } from "@/lib/supabase/cloudSync";
+import { FREE_PLAN_PROJECT_LIMIT, type Plan } from "@/lib/supabase/cloudSync";
 
 const DEFAULT_LAYER_ID = uuid();
 
@@ -69,8 +69,9 @@ interface ChartState {
   plan: Plan | null;
   setPlan: (plan: Plan | null) => void;
 
-  saveProjectAs: (name: string) => void;
-  saveCurrentProject: () => void;
+  /** Returns false (no-op) if the local save cap (FREE_PLAN_PROJECT_LIMIT) is already reached. */
+  saveProjectAs: (name: string) => boolean;
+  saveCurrentProject: () => boolean;
   loadProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
   deleteProject: (id: string) => void;
@@ -194,6 +195,9 @@ export const useChartStore = create<ChartState>()(
 
       saveProjectAs: (name) => {
         const { symbols, layers, guide, projects } = get();
+        // Local (signed-out) saves get the same cap as the free plan's cloud limit —
+        // otherwise it's a way to dodge the cloud limit entirely by just staying signed out.
+        if (projects.length >= FREE_PLAN_PROJECT_LIMIT) return false;
         const newProject: SavedProject = {
           id: uuid(),
           name,
@@ -203,12 +207,12 @@ export const useChartStore = create<ChartState>()(
           updatedAt: new Date().toISOString(),
         };
         set({ projects: [...projects, newProject], currentProjectId: newProject.id });
+        return true;
       },
       saveCurrentProject: () => {
         const { symbols, layers, guide, projects, currentProjectId } = get();
         if (!currentProjectId || !projects.some((p) => p.id === currentProjectId)) {
-          get().saveProjectAs("無題の作品");
-          return;
+          return get().saveProjectAs("無題の作品");
         }
         set({
           projects: projects.map((p) =>
@@ -217,6 +221,7 @@ export const useChartStore = create<ChartState>()(
               : p,
           ),
         });
+        return true;
       },
       loadProject: (id) => {
         const project = get().projects.find((p) => p.id === id);

@@ -36,6 +36,7 @@ export function ProjectPanel() {
   const plan = useChartStore((s) => s.plan);
   const setPlan = useChartStore((s) => s.setPlan);
   const resetProject = useChartStore((s) => s.resetProject);
+  const localProjectCount = useChartStore((s) => s.projects.length);
 
   const refreshAccount = useCallback(
     async (u: User) => {
@@ -80,10 +81,12 @@ export function ProjectPanel() {
     );
   }
 
-  // A free-plan user at their cloud save limit can't create a 4th project even
-  // temporarily/unsaved — otherwise the limit is really "3 saved + 1 free-floating extra",
-  // not an actual cap. Signed-out (local) users have no limit, so this never applies there.
-  const atProjectLimit = !!user && plan !== "premium" && cloudProjects.length >= FREE_PLAN_PROJECT_LIMIT;
+  // A free-plan user (cloud) or a signed-out visitor (local) at their save limit can't create
+  // a 4th project even temporarily/unsaved — otherwise the limit is really "3 saved + 1
+  // free-floating extra", not an actual cap.
+  const atCloudProjectLimit = !!user && plan !== "premium" && cloudProjects.length >= FREE_PLAN_PROJECT_LIMIT;
+  const atLocalProjectLimit = !user && localProjectCount >= FREE_PLAN_PROJECT_LIMIT;
+  const atProjectLimit = atCloudProjectLimit || atLocalProjectLimit;
 
   return (
     <div className="flex flex-col gap-1.5 border-b border-peach/40 p-3">
@@ -112,14 +115,14 @@ export function ProjectPanel() {
           atProjectLimit={atProjectLimit}
         />
       ) : (
-        <LocalProjectSection />
+        <LocalProjectSection atProjectLimit={atLocalProjectLimit} />
       )}
       {configured && <AccountLine user={user} />}
     </div>
   );
 }
 
-function LocalProjectSection() {
+function LocalProjectSection({ atProjectLimit }: { atProjectLimit: boolean }) {
   const projects = useChartStore((s) => s.projects);
   const currentProjectId = useChartStore((s) => s.currentProjectId);
   const saveProjectAs = useChartStore((s) => s.saveProjectAs);
@@ -133,13 +136,21 @@ function LocalProjectSection() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
+  const [limitMessage, setLimitMessage] = useState(false);
 
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const sortedProjects = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  // Saving with no current project creates a new one; saving-as always does.
+  const savingWouldCreateNew = !currentProject;
 
   const flashSaved = () => {
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
+  };
+
+  const flashLimitReached = () => {
+    setLimitMessage(true);
+    setTimeout(() => setLimitMessage(false), 3000);
   };
 
   const commitRename = () => {
@@ -208,16 +219,23 @@ function LocalProjectSection() {
 
       <div className="flex gap-1.5 text-xs">
         <button
-          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={savingWouldCreateNew && atProjectLimit}
+          title={savingWouldCreateNew && atProjectLimit ? `保存は${FREE_PLAN_PROJECT_LIMIT}つまでです。（プレミアムプラン※準備中）` : undefined}
           onClick={() => {
-            saveCurrentProject();
-            flashSaved();
+            if (saveCurrentProject()) {
+              flashSaved();
+            } else {
+              flashLimitReached();
+            }
           }}
         >
           {savedFlash ? "保存しました" : "保存"}
         </button>
         <button
-          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60"
+          className="flex-1 rounded-md border border-peach/60 px-2 py-1 text-ink hover:bg-cream/60 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={atProjectLimit}
+          title={atProjectLimit ? `保存は${FREE_PLAN_PROJECT_LIMIT}つまでです。（プレミアムプラン※準備中）` : undefined}
           onClick={() => {
             setDraftName(currentProject ? `${currentProject.name}のコピー` : "無題の作品");
             setShowSaveAs(true);
@@ -226,6 +244,12 @@ function LocalProjectSection() {
           名前を付けて保存
         </button>
       </div>
+
+      {limitMessage && (
+        <p className="text-[11px] leading-relaxed text-ink/40">
+          保存は{FREE_PLAN_PROJECT_LIMIT}つまでです。（プレミアムプラン※準備中）
+        </p>
+      )}
 
       {showSaveAs && (
         <div className="flex gap-1">
@@ -236,8 +260,8 @@ function LocalProjectSection() {
             onChange={(e) => setDraftName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && draftName.trim()) {
-                saveProjectAs(draftName.trim());
-                setShowSaveAs(false);
+                if (saveProjectAs(draftName.trim())) setShowSaveAs(false);
+                else flashLimitReached();
               } else if (e.key === "Escape") {
                 setShowSaveAs(false);
               }
@@ -247,8 +271,8 @@ function LocalProjectSection() {
             className="rounded bg-pink px-2 py-1 text-xs text-white hover:bg-salmon"
             onClick={() => {
               if (draftName.trim()) {
-                saveProjectAs(draftName.trim());
-                setShowSaveAs(false);
+                if (saveProjectAs(draftName.trim())) setShowSaveAs(false);
+                else flashLimitReached();
               }
             }}
           >
