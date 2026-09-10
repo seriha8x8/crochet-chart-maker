@@ -143,6 +143,16 @@ export default function LegalPage() {
             </li>
             <li>当サイトの内容は、予告なく変更・中断・終了する場合があります。あらかじめご了承ください。</li>
           </ul>
+
+          <h2 className={subheading} style={{ color: "#3D6B5C" }}>
+            編み図画像の書き出しについて
+          </h2>
+          <p className={body}>編み図メーカーで作成した編み図は、PNG画像として書き出すことができます。</p>
+          <ul className={list}>
+            <li>無料プランでの書き出し画像には、「Created with rii&apos;s crochet tools」という透かし（ウォーターマーク）が入ります。</li>
+            <li>有料のプレミアムプラン（準備中）をご利用いただくと、透かしなしで書き出せるようになります。</li>
+            <li>画像編集ソフト等を用いて、透かしを除去・改変する行為はご遠慮ください。</li>
+          </ul>
         </article>
       </main>
 

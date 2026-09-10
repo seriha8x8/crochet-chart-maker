@@ -1,6 +1,6 @@
 /** Tiled diagonal watermark drawn over free-plan exports; premium removes it. */
 function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  const text = "rii's crochet tools";
+  const text = "Created with rii's crochet tools";
   const fontSize = Math.max(14, Math.round(Math.min(width, height) / 22));
 
   ctx.save();

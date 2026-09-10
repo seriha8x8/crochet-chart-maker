@@ -27,7 +27,7 @@ export function Toolbar() {
   const exportRef = useRef<SVGSVGElement>(null);
 
   return (
-    <div className="flex h-12 items-center justify-end border-b border-peach/40 bg-white px-3">
+    <div className="flex min-h-12 items-center justify-end border-b border-peach/40 bg-white px-3 py-1.5">
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1">
           <button
@@ -149,7 +149,7 @@ export function Toolbar() {
               if (exportRef.current) downloadSvgAsPng(exportRef.current, "crochet-chart.png", 2, !isPremium);
             }}
           >
-            PNG書き出し
+            書き出し
           </button>
           {!isPremium && (
             <span className="whitespace-nowrap text-[10px] text-ink/40" title="プレミアムプラン※準備中で透かしなしに">
