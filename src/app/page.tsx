@@ -8,9 +8,8 @@ const TOOLS = [
     description: "基本から応用まで動画で解説",
     buttonLabel: "編み方を見る",
     href: "/videos",
-    iconBg: "#FDF6D8",
     iconColor: "#D4C220",
-    icon: <PlayIcon />,
+    iconSrc: "/icons/videos-icon.webp",
   },
   {
     key: "editor",
@@ -18,9 +17,8 @@ const TOOLS = [
     description: "かぎ針編みの編み図を作成",
     buttonLabel: "編み図を作ってみる",
     href: "/editor",
-    iconBg: "#D8F0E8",
     iconColor: "#5BC8AC",
-    icon: <ChartIcon />,
+    iconSrc: "/icons/editor-icon.webp",
   },
   {
     key: "yarn",
@@ -28,9 +26,8 @@ const TOOLS = [
     description: "手持ちの毛糸を色や素材で整理",
     buttonLabel: "毛糸を整理する",
     href: "/yarn/yarns",
-    iconBg: "#FCE7EA",
     iconColor: "#F18D9E",
-    icon: <YarnIcon />,
+    iconSrc: "/icons/yarn-icon.webp",
   },
 ] as const;
 
@@ -87,12 +84,9 @@ export default function HomePage() {
               className="flex flex-col items-center gap-4 rounded-2xl p-8 text-center"
               style={{ backgroundColor: "#FFFFFF", border: "1px solid #CDEBE1" }}
             >
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-full"
-                style={{ backgroundColor: tool.iconBg, color: tool.iconColor }}
-              >
-                {tool.icon}
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
+              <img src={tool.iconSrc} alt="" className="h-16 w-16 rounded-full object-cover" />
+
               <h2 className="text-lg font-semibold" style={{ color: "#3D6B5C" }}>
                 {tool.title}
               </h2>
@@ -137,43 +131,6 @@ export default function HomePage() {
 
       <SiteFooter />
     </div>
-  );
-}
-
-function ChartIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <rect x="5" y="5" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M5 11.3H23M5 17.7H23M11.3 5V23M17.7 5V23"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function YarnIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M6 11c4 2 8 2 12 0M5.5 14.5c5 2.5 11.5 2.5 17 0M6 18c4-2 8-2 12 0"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 10l5.5 4-5.5 4v-8z" fill="currentColor" />
-    </svg>
   );
 }
 
