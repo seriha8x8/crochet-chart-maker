@@ -46,7 +46,7 @@ export function VideoCard({ item, thumbnailBg }: { item: VideoItem; thumbnailBg:
               alt=""
               className="h-full w-full object-cover"
             />
-            <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/25">
+            <span className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 transition group-hover:bg-black/75">
               <PlayButtonOverlay />
             </span>
           </button>
@@ -81,9 +81,8 @@ function PlayIcon() {
 
 function PlayButtonOverlay() {
   return (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="24" cy="24" r="22" fill="white" opacity="0.9" />
-      <path d="M19 15l16 9-16 9V15z" fill="#F18D9E" />
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M3 1.5l10 5.5-10 5.5v-11z" fill="white" />
     </svg>
   );
 }
