@@ -9,6 +9,7 @@ import { YARN_COLORS, YARN_MATERIALS, KNITTING_NEEDLE_SIZES, CROCHET_HOOK_SIZES 
 import { PhotoField } from "@/components/yarn/PhotoField";
 import { UpgradeModal } from "@/components/yarn/UpgradeModal";
 import { CheckboxChips } from "@/components/yarn/CheckboxChips";
+import { ColorSwatchChips } from "@/components/yarn/ColorSwatchChips";
 
 const fieldClass =
   "rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
@@ -128,7 +129,7 @@ export function YarnForm({
 
         <fieldset className="flex flex-col gap-1.5 text-sm">
           <legend className="mb-0.5">色（複数選択可。段染めなどは複数選んでください）</legend>
-          <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={yarn?.color ?? []} />
+          <ColorSwatchChips name="color" options={YARN_COLORS} defaultValues={yarn?.color ?? []} />
         </fieldset>
 
         <label className="flex flex-col gap-1 text-sm">

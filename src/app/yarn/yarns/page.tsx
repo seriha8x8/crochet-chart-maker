@@ -9,6 +9,7 @@ import { getPhotoUrl } from "@/lib/yarn/photos";
 import { listYarns, type YarnFacets } from "@/lib/yarn/data";
 import { YARN_COLORS, YARN_MATERIALS, KNITTING_NEEDLE_SIZES, CROCHET_HOOK_SIZES, thicknessLabel } from "@/lib/yarn/constants";
 import { CheckboxChips } from "@/components/yarn/CheckboxChips";
+import { ColorSwatchChips } from "@/components/yarn/ColorSwatchChips";
 import type { Yarn } from "@/lib/yarn/types";
 
 const selectClass =
@@ -141,7 +142,7 @@ function YarnsListContent() {
 
               <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
                 <legend className="mb-0.5">色（複数選択可）</legend>
-                <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={color} />
+                <ColorSwatchChips name="color" options={YARN_COLORS} defaultValues={color} />
               </fieldset>
 
               <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">

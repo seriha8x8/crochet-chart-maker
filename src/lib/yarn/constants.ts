@@ -4,6 +4,9 @@ export const YARN_COLORS = [
   "白",
   "生成り",
   "ベージュ",
+  "ライトグレー",
+  "ダークグレー",
+  "黒",
   "黄",
   "オレンジ",
   "赤",
@@ -11,13 +14,38 @@ export const YARN_COLORS = [
   "紫",
   "青",
   "水色",
+  "ネイビー",
   "緑",
   "茶",
-  "グレー",
-  "黒",
   "ミックス・段染め",
   "その他",
 ] as const;
+
+/** Swatch shown on each color chip so it reads as an actual color at a glance instead of a
+ *  plain checkbox. `text` picks a check-mark color with enough contrast against `background`. */
+export const YARN_COLOR_SWATCHES: Record<(typeof YARN_COLORS)[number], { background: string; text: "dark" | "light" }> = {
+  白: { background: "#FFFFFF", text: "dark" },
+  生成り: { background: "#F1E6D0", text: "dark" },
+  ベージュ: { background: "#E3C9A0", text: "dark" },
+  ライトグレー: { background: "#D6D6D6", text: "dark" },
+  ダークグレー: { background: "#5B5B5B", text: "light" },
+  黒: { background: "#1F1F1F", text: "light" },
+  黄: { background: "#F2CB4E", text: "dark" },
+  オレンジ: { background: "#EF9448", text: "dark" },
+  赤: { background: "#D6524A", text: "light" },
+  ピンク: { background: "#F0A8C0", text: "dark" },
+  紫: { background: "#9A72B8", text: "light" },
+  青: { background: "#4A7FC4", text: "light" },
+  水色: { background: "#8FCFEA", text: "dark" },
+  ネイビー: { background: "#233A5E", text: "light" },
+  緑: { background: "#6EA96E", text: "dark" },
+  茶: { background: "#8B5E3C", text: "light" },
+  "ミックス・段染め": {
+    background: "linear-gradient(135deg, #F0A8C0 0%, #F2CB4E 35%, #8FCFEA 70%, #9A72B8 100%)",
+    text: "light",
+  },
+  その他: { background: "#EDEDED", text: "dark" },
+};
 
 /** Standard yarn materials — multi-select, for blended yarns (e.g. wool + acrylic). */
 export const YARN_MATERIALS = [
