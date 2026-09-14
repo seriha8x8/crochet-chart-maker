@@ -4,10 +4,10 @@ export type Yarn = {
   id: string;
   user_id: string;
   name: string;
-  color: string | null;
+  color: string[];
   manufacturer: string | null;
-  material: string | null;
-  thickness: string | null;
+  material: string[];
+  thickness: string[];
   stock_count: number;
   photo_url: string | null;
   created_at: string;

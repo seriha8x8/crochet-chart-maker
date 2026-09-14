@@ -61,6 +61,7 @@ function YarnDetailContent() {
 
       <YarnForm
         key={saveVersion}
+        userId={user.id}
         yarn={yarn}
         photoUrl={photoUrl}
         plan={plan}

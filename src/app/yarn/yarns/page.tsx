@@ -7,14 +7,14 @@ import { YarnPublicShell, useOptionalYarnUser } from "@/components/yarn/AuthGate
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getPhotoUrl } from "@/lib/yarn/photos";
 import { listYarns, type YarnFacets } from "@/lib/yarn/data";
+import { YARN_COLORS, YARN_MATERIALS, KNITTING_NEEDLE_SIZES, CROCHET_HOOK_SIZES, thicknessLabel } from "@/lib/yarn/constants";
+import { CheckboxChips } from "@/components/yarn/CheckboxChips";
 import type { Yarn } from "@/lib/yarn/types";
 
 const selectClass =
   "rounded-md border border-stone-300 px-2 py-1.5 text-sm focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
 
-const FILTER_KEYS = ["q", "color", "manufacturer", "material", "thickness"] as const;
-
-const EMPTY_FACETS: YarnFacets = { color: [], manufacturer: [], material: [], thickness: [] };
+const EMPTY_FACETS: YarnFacets = { manufacturer: [] };
 
 function YarnsListContent() {
   const user = useOptionalYarnUser();
@@ -22,10 +22,15 @@ function YarnsListContent() {
   const searchParams = useSearchParams();
 
   const q = searchParams.get("q") ?? "";
-  const color = searchParams.get("color") ?? "";
   const manufacturer = searchParams.get("manufacturer") ?? "";
-  const material = searchParams.get("material") ?? "";
-  const thickness = searchParams.get("thickness") ?? "";
+  const color = searchParams.getAll("color");
+  const material = searchParams.getAll("material");
+  const thickness = searchParams.getAll("thickness");
+  // Arrays from getAll() are a fresh reference every render — join into a stable string
+  // for the effect's dependency list so it doesn't refetch on every unrelated re-render.
+  const colorKey = color.join(",");
+  const materialKey = material.join(",");
+  const thicknessKey = thickness.join(",");
 
   const [yarns, setYarns] = useState<Yarn[] | null>(null);
   const [facets, setFacets] = useState<YarnFacets>(EMPTY_FACETS);
@@ -53,14 +58,18 @@ function YarnsListContent() {
     return () => {
       cancelled = true;
     };
-  }, [user, q, color, manufacturer, material, thickness]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- colorKey/materialKey/thicknessKey stand in for color/material/thickness
+  }, [user, q, manufacturer, colorKey, materialKey, thicknessKey]);
 
   function submitFilters(formData: FormData) {
     const params = new URLSearchParams();
-    for (const key of FILTER_KEYS) {
-      const value = String(formData.get(key) ?? "").trim();
-      if (value) params.set(key, value);
-    }
+    const qVal = String(formData.get("q") ?? "").trim();
+    if (qVal) params.set("q", qVal);
+    const manufacturerVal = String(formData.get("manufacturer") ?? "").trim();
+    if (manufacturerVal) params.set("manufacturer", manufacturerVal);
+    for (const v of formData.getAll("color")) params.append("color", String(v));
+    for (const v of formData.getAll("material")) params.append("material", String(v));
+    for (const v of formData.getAll("thickness")) params.append("thickness", String(v));
     router.push(params.size > 0 ? `/yarn/yarns?${params}` : "/yarn/yarns");
   }
 
@@ -80,69 +89,63 @@ function YarnsListContent() {
 
       {user && (
         <form
-          className="flex flex-wrap items-end gap-3"
+          className="flex flex-col gap-4 rounded-lg border border-[#5BC8AC26] bg-white p-4"
           onSubmit={(e) => {
             e.preventDefault();
             submitFilters(new FormData(e.currentTarget));
           }}
         >
-          <label className="flex flex-col gap-1 text-xs text-stone-500">
-            フリーワード検索
-            <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-stone-500">
-            色
-            <select name="color" defaultValue={color} className={selectClass}>
-              <option value="">すべて</option>
-              {facets.color.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-stone-500">
-            メーカー
-            <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
-              <option value="">すべて</option>
-              {facets.manufacturer.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-stone-500">
-            素材
-            <select name="material" defaultValue={material} className={selectClass}>
-              <option value="">すべて</option>
-              {facets.material.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-stone-500">
-            太さ
-            <select name="thickness" defaultValue={thickness} className={selectClass}>
-              <option value="">すべて</option>
-              {facets.thickness.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
-          >
-            絞り込む
-          </button>
-          <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
-            リセット
-          </Link>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1 text-xs text-stone-500">
+              フリーワード検索
+              <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-stone-500">
+              メーカー
+              <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
+                <option value="">すべて</option>
+                {facets.manufacturer.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
+            <legend className="mb-0.5">色（複数選択可）</legend>
+            <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={color} />
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
+            <legend className="mb-0.5">素材（複数選択可）</legend>
+            <CheckboxChips name="material" options={[...YARN_MATERIALS]} defaultValues={material} />
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2 text-xs text-stone-500">
+            <legend className="mb-0.5">太さ（複数選択可）</legend>
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">棒針</span>
+              <CheckboxChips name="thickness" options={KNITTING_NEEDLE_SIZES} defaultValues={thickness} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">かぎ針</span>
+              <CheckboxChips name="thickness" options={CROCHET_HOOK_SIZES} defaultValues={thickness} />
+            </div>
+          </fieldset>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
+            >
+              絞り込む
+            </button>
+            <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
+              リセット
+            </Link>
+          </div>
         </form>
       )}
 
@@ -185,13 +188,16 @@ function YarnsListContent() {
                 )}
                 <span className="font-medium">{yarn.name}</span>
                 <div className="flex flex-wrap gap-1">
-                  {[yarn.color, yarn.manufacturer, yarn.material, yarn.thickness]
-                    .filter(Boolean)
-                    .map((tag) => (
-                      <span key={tag} className="rounded-full bg-[#D8F0E8] px-2 py-0.5 text-xs text-stone-700">
-                        {tag}
-                      </span>
-                    ))}
+                  {[
+                    ...yarn.color,
+                    ...(yarn.manufacturer ? [yarn.manufacturer] : []),
+                    ...yarn.material,
+                    ...yarn.thickness.map(thicknessLabel),
+                  ].map((tag, i) => (
+                    <span key={`${tag}-${i}`} className="rounded-full bg-[#D8F0E8] px-2 py-0.5 text-xs text-stone-700">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
                 <span className="w-fit rounded-full bg-[#FCE7EA] px-2 py-0.5 text-xs font-medium text-[#B2536D]">
                   在庫: {yarn.stock_count}玉

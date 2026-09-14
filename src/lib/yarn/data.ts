@@ -30,26 +30,23 @@ export type PhotoChange = { removePhoto: boolean; file: File | null };
 
 export type YarnFields = {
   name: string;
-  color: string | null;
+  color: string[];
   manufacturer: string | null;
-  material: string | null;
-  thickness: string | null;
+  material: string[];
+  thickness: string[];
   stock_count: number;
 };
 
 export type YarnFilters = {
   q?: string;
-  color?: string;
+  color?: string[];
   manufacturer?: string;
-  material?: string;
-  thickness?: string;
+  material?: string[];
+  thickness?: string[];
 };
 
 export type YarnFacets = {
-  color: string[];
   manufacturer: string[];
-  material: string[];
-  thickness: string[];
 };
 
 function uniqueValues(rows: Record<string, unknown>[] | null, key: string): string[] {
@@ -62,6 +59,14 @@ function uniqueValues(rows: Record<string, unknown>[] | null, key: string): stri
   return Array.from(values).sort();
 }
 
+/** Manufacturer/shop names the user has already typed, so the input can suggest them
+ *  instead of starting from a blank field every time. */
+export async function listManufacturers(userId: string): Promise<string[]> {
+  const supabase = requireSupabase();
+  const { data } = await supabase.from("yarns").select("manufacturer").eq("user_id", userId);
+  return uniqueValues(data, "manufacturer");
+}
+
 export async function listYarns(userId: string, filters: YarnFilters): Promise<{ yarns: Yarn[]; facets: YarnFacets }> {
   const supabase = requireSupabase();
 
@@ -71,23 +76,20 @@ export async function listYarns(userId: string, filters: YarnFilters): Promise<{
     const q = `%${filters.q}%`;
     query = query.or(`name.ilike.${q},manufacturer.ilike.${q}`);
   }
-  if (filters.color) query = query.eq("color", filters.color);
+  if (filters.color?.length) query = query.overlaps("color", filters.color);
   if (filters.manufacturer) query = query.eq("manufacturer", filters.manufacturer);
-  if (filters.material) query = query.eq("material", filters.material);
-  if (filters.thickness) query = query.eq("thickness", filters.thickness);
+  if (filters.material?.length) query = query.overlaps("material", filters.material);
+  if (filters.thickness?.length) query = query.overlaps("thickness", filters.thickness);
 
   const [{ data: yarns }, { data: allYarns }] = await Promise.all([
     query,
-    supabase.from("yarns").select("color, manufacturer, material, thickness").eq("user_id", userId),
+    supabase.from("yarns").select("manufacturer").eq("user_id", userId),
   ]);
 
   return {
     yarns: yarns ?? [],
     facets: {
-      color: uniqueValues(allYarns, "color"),
       manufacturer: uniqueValues(allYarns, "manufacturer"),
-      material: uniqueValues(allYarns, "material"),
-      thickness: uniqueValues(allYarns, "thickness"),
     },
   };
 }

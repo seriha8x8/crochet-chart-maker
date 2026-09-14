@@ -17,6 +17,7 @@ function NewYarnContent() {
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-semibold">毛糸を登録</h1>
       <YarnForm
+        userId={user.id}
         photoUrl={null}
         plan={plan}
         onSubmit={async (fields, photo) => {

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import type { Yarn, YarnPlan } from "@/lib/yarn/types";
 import type { YarnFields, PhotoChange } from "@/lib/yarn/data";
-import { UpgradeRequiredError } from "@/lib/yarn/data";
+import { UpgradeRequiredError, listManufacturers } from "@/lib/yarn/data";
+import { YARN_COLORS, YARN_MATERIALS, KNITTING_NEEDLE_SIZES, CROCHET_HOOK_SIZES } from "@/lib/yarn/constants";
 import { PhotoField } from "@/components/yarn/PhotoField";
 import { UpgradeModal } from "@/components/yarn/UpgradeModal";
+import { CheckboxChips } from "@/components/yarn/CheckboxChips";
 
 const fieldClass =
   "rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
@@ -14,11 +16,13 @@ const fieldClass =
 type SubmitResult = { createdName: string } | { saved: true };
 
 export function YarnForm({
+  userId,
   yarn,
   photoUrl,
   plan,
   onSubmit,
 }: {
+  userId: string;
   yarn?: Yarn;
   photoUrl: string | null;
   plan: YarnPlan;
@@ -31,6 +35,21 @@ export function YarnForm({
   const [removePhoto, setRemovePhoto] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoFieldKey, setPhotoFieldKey] = useState(0);
+  const [manufacturerOptions, setManufacturerOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listManufacturers(userId)
+      .then((names) => {
+        if (!cancelled) setManufacturerOptions(names);
+      })
+      .catch(() => {
+        // Suggestions are a nicety — a fetch failure shouldn't block the rest of the form.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -50,10 +69,10 @@ export function YarnForm({
 
     const fields: YarnFields = {
       name,
-      color: String(data.get("color") ?? "").trim() || null,
+      color: data.getAll("color").map(String),
       manufacturer: String(data.get("manufacturer") ?? "").trim() || null,
-      material: String(data.get("material") ?? "").trim() || null,
-      thickness: String(data.get("thickness") ?? "").trim() || null,
+      material: data.getAll("material").map(String),
+      thickness: data.getAll("thickness").map(String),
       stock_count: Math.max(0, Number(data.get("stock_count") ?? 0) || 0),
     };
 
@@ -91,27 +110,58 @@ export function YarnForm({
           </Link>
         </div>
       )}
-      <form onSubmit={handleSubmit} className="flex max-w-lg flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex max-w-lg flex-col gap-5">
         <label className="flex flex-col gap-1 text-sm">
           名前
           <input name="name" required defaultValue={yarn?.name} className={fieldClass} />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          色
-          <input name="color" defaultValue={yarn?.color ?? ""} className={fieldClass} />
-        </label>
+
+        <fieldset className="flex flex-col gap-1.5 text-sm">
+          <legend className="mb-0.5">色（複数選択可。段染めなどは複数選んでください）</legend>
+          <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={yarn?.color ?? []} />
+        </fieldset>
+
         <label className="flex flex-col gap-1 text-sm">
           メーカー／ショップ
-          <input name="manufacturer" defaultValue={yarn?.manufacturer ?? ""} className={fieldClass} />
+          <input
+            name="manufacturer"
+            list="manufacturer-options"
+            defaultValue={yarn?.manufacturer ?? ""}
+            className={fieldClass}
+            placeholder="入力すると過去の候補も出てきます"
+          />
+          <datalist id="manufacturer-options">
+            {manufacturerOptions.map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          素材
-          <input name="material" defaultValue={yarn?.material ?? ""} className={fieldClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          太さ
-          <input name="thickness" defaultValue={yarn?.thickness ?? ""} className={fieldClass} />
-        </label>
+
+        <fieldset className="flex flex-col gap-1.5 text-sm">
+          <legend className="mb-0.5">素材（複数選択可）</legend>
+          <CheckboxChips name="material" options={[...YARN_MATERIALS]} defaultValues={yarn?.material ?? []} />
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2 text-sm">
+          <legend className="mb-0.5">太さ（複数選択可）</legend>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-stone-500">棒針</span>
+            <CheckboxChips
+              name="thickness"
+              options={KNITTING_NEEDLE_SIZES}
+              defaultValues={yarn?.thickness ?? []}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-stone-500">かぎ針</span>
+            <CheckboxChips
+              name="thickness"
+              options={CROCHET_HOOK_SIZES}
+              defaultValues={yarn?.thickness ?? []}
+            />
+          </div>
+        </fieldset>
+
         <label className="flex flex-col gap-1 text-sm">
           在庫数（玉）
           <input type="number" name="stock_count" min={0} defaultValue={yarn?.stock_count ?? 0} className={fieldClass} />
