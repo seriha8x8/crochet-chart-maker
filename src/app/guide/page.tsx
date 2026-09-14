@@ -10,6 +10,7 @@ const TOC = [
   { href: "#videos", label: "編み方動画" },
   { href: "#editor", label: "編み図メーカー" },
   { href: "#yarn", label: "毛糸管理" },
+  { href: "#counter", label: "編み物カウンター" },
 ] as const;
 
 export default function GuidePage() {
@@ -94,6 +95,20 @@ export default function GuidePage() {
           </Feature>
           <Feature title="編んだ作品をメモする">
             使った毛糸と紐づけて、編んだ作品の記録をメモとして残せます。過去にどの毛糸で何を作ったかを振り返るのに便利です。
+          </Feature>
+        </GuideSection>
+
+        <GuideSection id="counter" title="編み物カウンター" intro="編み物中に段数・目数・色替えなどをタップでカウントできるツールです。">
+          <Feature title="カウンターを増やす" image="/guide/counter-card.png" imageAlt="名前とプリセットチップを設定したカウンターカード">
+            最大8個までカウンターを追加できます。名前は自由入力のほか、「段数」「目数」「色1」〜「色3」のプリセットチップからも選べるので、増し目や配色の変わり目など複数のカウントを同時に管理できます。
+          </Feature>
+
+          <Feature title="タップでカウント">
+            大きなタップゾーンをタップするたびに+1され、最終カウント日時も表示されます。数え間違えたときは、少し小さめの「−1」ボタンで1つ戻せます。ブラウザに自動保存されるので、ページを閉じたり読み込み直したりしても数字は消えません。
+          </Feature>
+
+          <Feature title="リセット" image="/guide/counter-reset-confirm.png" imageAlt="すべてリセットの確認表示">
+            カウンターごとの個別リセットはカード内から、すべてまとめてリセットする場合は画面下部のボタンから行えます。「すべてリセット」は誤って押してしまわないよう、1回目のタップで確認表示に変わり、もう一度押すと実行される2段階方式になっています。
           </Feature>
         </GuideSection>
       </main>

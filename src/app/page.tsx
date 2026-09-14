@@ -32,11 +32,11 @@ const TOOLS = [
   {
     key: "counter",
     title: "編み物カウンター",
-    description: "段数・目数・色替えをタップで記録",
+    description: "タップで段数や目数をカウント可能",
     buttonLabel: "カウンターを使う",
     href: "/counter",
-    iconColor: "#5FB79B",
-    iconBg: "#98DBC6",
+    iconColor: "#D4C220",
+    iconBg: "#FDF6D8",
   },
 ] as const;
 
