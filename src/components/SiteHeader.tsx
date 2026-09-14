@@ -25,9 +25,10 @@ export function SiteHeader({ current }: { current: NavKey }) {
         <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
           <img
-            src="/icons/logo-bear.png"
+            src="/image0.jpeg"
             alt="rii's crochet tools"
-            className="h-9 w-9 shrink-0 object-contain"
+            className="h-9 w-9 shrink-0 rounded-full object-cover"
+            style={{ border: "1.5px solid #5BC8AC" }}
           />
           <span className="whitespace-nowrap text-base font-semibold text-[#2f6f61]">rii&apos;s crochet tools</span>
         </Link>
