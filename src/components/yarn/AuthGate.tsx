@@ -6,7 +6,8 @@ import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { YarnAppHeader } from "@/components/yarn/YarnAppHeader";
 
-const YarnUserContext = createContext<User | null>(null);
+/** undefined = auth state not resolved yet, null = signed out. */
+const YarnUserContext = createContext<User | null | undefined>(undefined);
 
 export function useYarnUser(): User {
   const user = useContext(YarnUserContext);
@@ -14,11 +15,16 @@ export function useYarnUser(): User {
   return user;
 }
 
+/** For pages that render for signed-out visitors too (see YarnPublicShell) and need to
+ *  branch on auth state themselves instead of being redirected. */
+export function useOptionalYarnUser(): User | null | undefined {
+  return useContext(YarnUserContext);
+}
+
 /** Client-side equivalent of the old proxy.ts redirect: since this app ships as a
- *  static export there's no middleware, so each protected page waits for the browser
- *  Supabase session to resolve and sends signed-out visitors to /yarn/login itself. */
-export function RequireYarnUser({ children }: { children: ReactNode }) {
-  const router = useRouter();
+ *  static export there's no middleware, so each page resolves the browser Supabase
+ *  session itself. */
+function useYarnAuthState() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
 
   useEffect(() => {
@@ -43,6 +49,15 @@ export function RequireYarnUser({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  return user;
+}
+
+/** Hard-gates a page behind login: signed-out visitors are redirected to /yarn/login.
+ *  Use for pages that only make sense once signed in (registering/editing something). */
+export function RequireYarnUser({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const user = useYarnAuthState();
+
   useEffect(() => {
     if (user === null) router.replace("/yarn/login");
   }, [user, router]);
@@ -50,6 +65,20 @@ export function RequireYarnUser({ children }: { children: ReactNode }) {
   if (!user) {
     return <p className="px-4 py-10 text-center text-sm text-stone-500">読み込み中…</p>;
   }
+
+  return (
+    <YarnUserContext.Provider value={user}>
+      <YarnAppHeader />
+      {children}
+    </YarnUserContext.Provider>
+  );
+}
+
+/** Like RequireYarnUser, but never redirects — signed-out visitors still see the page
+ *  (via useOptionalYarnUser) so browsing doesn't require an account. Only actions that
+ *  actually need one (registering a yarn, etc.) route through RequireYarnUser pages. */
+export function YarnPublicShell({ children }: { children: ReactNode }) {
+  const user = useYarnAuthState();
 
   return (
     <YarnUserContext.Provider value={user}>

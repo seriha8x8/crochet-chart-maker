@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RequireYarnUser, useYarnUser } from "@/components/yarn/AuthGate";
+import { YarnPublicShell, useOptionalYarnUser } from "@/components/yarn/AuthGate";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getPhotoUrl } from "@/lib/yarn/photos";
 import { listYarns, type YarnFacets } from "@/lib/yarn/data";
@@ -17,7 +17,7 @@ const FILTER_KEYS = ["q", "color", "manufacturer", "material", "thickness"] as c
 const EMPTY_FACETS: YarnFacets = { color: [], manufacturer: [], material: [], thickness: [] };
 
 function YarnsListContent() {
-  const user = useYarnUser();
+  const user = useOptionalYarnUser();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -32,6 +32,14 @@ function YarnsListContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Still resolving the browser session — wait rather than flashing the empty state.
+    if (user === undefined) return;
+    // Signed-out visitors have nothing registered yet — skip the fetch (there's no user id
+    // to query with) and just show the empty state instead of spinning forever.
+    if (user === null) {
+      Promise.resolve().then(() => setYarns([]));
+      return;
+    }
     let cancelled = false;
     listYarns(user.id, { q, color, manufacturer, material, thickness })
       .then((result) => {
@@ -45,7 +53,7 @@ function YarnsListContent() {
     return () => {
       cancelled = true;
     };
-  }, [user.id, q, color, manufacturer, material, thickness]);
+  }, [user, q, color, manufacturer, material, thickness]);
 
   function submitFilters(formData: FormData) {
     const params = new URLSearchParams();
@@ -70,78 +78,91 @@ function YarnsListContent() {
         </Link>
       </div>
 
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submitFilters(new FormData(e.currentTarget));
-        }}
-      >
-        <label className="flex flex-col gap-1 text-xs text-stone-500">
-          フリーワード検索
-          <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-stone-500">
-          色
-          <select name="color" defaultValue={color} className={selectClass}>
-            <option value="">すべて</option>
-            {facets.color.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-stone-500">
-          メーカー
-          <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
-            <option value="">すべて</option>
-            {facets.manufacturer.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-stone-500">
-          素材
-          <select name="material" defaultValue={material} className={selectClass}>
-            <option value="">すべて</option>
-            {facets.material.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-stone-500">
-          太さ
-          <select name="thickness" defaultValue={thickness} className={selectClass}>
-            <option value="">すべて</option>
-            {facets.thickness.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
+      {user && (
+        <form
+          className="flex flex-wrap items-end gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitFilters(new FormData(e.currentTarget));
+          }}
         >
-          絞り込む
-        </button>
-        <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
-          リセット
-        </Link>
-      </form>
+          <label className="flex flex-col gap-1 text-xs text-stone-500">
+            フリーワード検索
+            <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-stone-500">
+            色
+            <select name="color" defaultValue={color} className={selectClass}>
+              <option value="">すべて</option>
+              {facets.color.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-stone-500">
+            メーカー
+            <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
+              <option value="">すべて</option>
+              {facets.manufacturer.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-stone-500">
+            素材
+            <select name="material" defaultValue={material} className={selectClass}>
+              <option value="">すべて</option>
+              {facets.material.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-stone-500">
+            太さ
+            <select name="thickness" defaultValue={thickness} className={selectClass}>
+              <option value="">すべて</option>
+              {facets.thickness.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="submit"
+            className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
+          >
+            絞り込む
+          </button>
+          <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
+            リセット
+          </Link>
+        </form>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {yarns === null ? (
         <p className="text-sm text-stone-500">読み込み中…</p>
       ) : yarns.length === 0 ? (
-        <p className="text-sm text-stone-500">該当する毛糸がありません。</p>
+        <div className="rounded-lg border border-dashed border-[#5BC8AC66] bg-white p-6 text-center text-sm text-stone-500">
+          {user ? (
+            <p>該当する毛糸がありません。</p>
+          ) : (
+            <>
+              <p>まだ毛糸は登録されていません。</p>
+              <p className="mt-1">
+                「+ 毛糸を登録」を押すと、ログインまたは新規登録の画面に進みます。
+              </p>
+            </>
+          )}
+        </div>
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {yarns.map((yarn) => (
@@ -186,10 +207,10 @@ function YarnsListContent() {
 
 export default function YarnsPage() {
   return (
-    <RequireYarnUser>
+    <YarnPublicShell>
       <Suspense fallback={<p className="px-4 py-10 text-center text-sm text-stone-500">読み込み中…</p>}>
         <YarnsListContent />
       </Suspense>
-    </RequireYarnUser>
+    </YarnPublicShell>
   );
 }

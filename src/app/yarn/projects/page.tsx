@@ -2,18 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RequireYarnUser, useYarnUser } from "@/components/yarn/AuthGate";
+import { YarnPublicShell, useOptionalYarnUser } from "@/components/yarn/AuthGate";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getPhotoUrl } from "@/lib/yarn/photos";
 import { listProjects } from "@/lib/yarn/data";
 import type { Project } from "@/lib/yarn/types";
 
 function ProjectsListContent() {
-  const user = useYarnUser();
+  const user = useOptionalYarnUser();
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Still resolving the browser session — wait rather than flashing the empty state.
+    if (user === undefined) return;
+    // Signed-out visitors have nothing registered yet — skip the fetch (there's no user id
+    // to query with) and just show the empty state instead of spinning forever.
+    if (user === null) {
+      Promise.resolve().then(() => setProjects([]));
+      return;
+    }
     let cancelled = false;
     listProjects(user.id)
       .then((data) => {
@@ -25,7 +33,7 @@ function ProjectsListContent() {
     return () => {
       cancelled = true;
     };
-  }, [user.id]);
+  }, [user]);
 
   const supabase = getSupabaseClient();
 
@@ -46,7 +54,18 @@ function ProjectsListContent() {
       {projects === null ? (
         <p className="text-sm text-stone-500">読み込み中…</p>
       ) : projects.length === 0 ? (
-        <p className="text-sm text-stone-500">まだ作品メモがありません。</p>
+        <div className="rounded-lg border border-dashed border-[#5BC8AC66] bg-white p-6 text-center text-sm text-stone-500">
+          {user ? (
+            <p>まだ作品メモがありません。</p>
+          ) : (
+            <>
+              <p>まだ作品メモは登録されていません。</p>
+              <p className="mt-1">
+                「+ 作品メモを登録」を押すと、ログインまたは新規登録の画面に進みます。
+              </p>
+            </>
+          )}
+        </div>
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {projects.map((project) => (
@@ -84,8 +103,8 @@ function ProjectsListContent() {
 
 export default function ProjectsPage() {
   return (
-    <RequireYarnUser>
+    <YarnPublicShell>
       <ProjectsListContent />
-    </RequireYarnUser>
+    </YarnPublicShell>
   );
 }
