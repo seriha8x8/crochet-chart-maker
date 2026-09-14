@@ -37,12 +37,17 @@ export type YarnFields = {
   stock_count: number;
 };
 
+export type YarnSortField = "created_at" | "stock_count" | "manufacturer" | "color";
+export type YarnSortDirection = "asc" | "desc";
+
 export type YarnFilters = {
   q?: string;
   color?: string[];
   manufacturer?: string;
   material?: string[];
   thickness?: string[];
+  sortField?: YarnSortField;
+  sortDirection?: YarnSortDirection;
 };
 
 export type YarnFacets = {
@@ -70,7 +75,18 @@ export async function listManufacturers(userId: string): Promise<string[]> {
 export async function listYarns(userId: string, filters: YarnFilters): Promise<{ yarns: Yarn[]; facets: YarnFacets }> {
   const supabase = requireSupabase();
 
-  let query = supabase.from("yarns").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  const sortField = filters.sortField ?? "created_at";
+  const ascending = filters.sortDirection === "asc";
+
+  let query = supabase
+    .from("yarns")
+    .select("*")
+    .eq("user_id", userId)
+    .order(sortField, { ascending, nullsFirst: false });
+  if (sortField !== "created_at") {
+    // Tie-break so same-value rows (e.g. no manufacturer, same stock count) stay in a stable order.
+    query = query.order("created_at", { ascending: false });
+  }
 
   if (filters.q) {
     const q = `%${filters.q}%`;

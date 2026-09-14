@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { YarnPublicShell, useOptionalYarnUser } from "@/components/yarn/AuthGate";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getPhotoUrl } from "@/lib/yarn/photos";
-import { listYarns, type YarnFacets } from "@/lib/yarn/data";
+import { listYarns, type YarnFacets, type YarnSortField, type YarnSortDirection } from "@/lib/yarn/data";
 import { YARN_COLORS, YARN_MATERIALS, KNITTING_NEEDLE_SIZES, CROCHET_HOOK_SIZES, thicknessLabel } from "@/lib/yarn/constants";
 import { CheckboxChips } from "@/components/yarn/CheckboxChips";
 import { ColorSwatchChips } from "@/components/yarn/ColorSwatchChips";
@@ -16,6 +16,22 @@ const selectClass =
   "rounded-md border border-stone-300 px-2 py-1.5 text-sm focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
 
 const EMPTY_FACETS: YarnFacets = { manufacturer: [] };
+
+const SORT_FIELD_LABELS: Record<YarnSortField, string> = {
+  created_at: "登録日",
+  stock_count: "在庫数",
+  manufacturer: "ブランド／メーカー",
+  color: "色",
+};
+
+// A sensible starting direction for each field when it's first selected (newest/most-stock
+// first for dates & numbers, A→Z for text) — the toggle button still flips either way.
+const DEFAULT_SORT_DIRECTION: Record<YarnSortField, YarnSortDirection> = {
+  created_at: "desc",
+  stock_count: "desc",
+  manufacturer: "asc",
+  color: "asc",
+};
 
 function YarnsListContent() {
   const user = useOptionalYarnUser();
@@ -27,6 +43,8 @@ function YarnsListContent() {
   const color = searchParams.getAll("color");
   const material = searchParams.getAll("material");
   const thickness = searchParams.getAll("thickness");
+  const sortField = (searchParams.get("sort") as YarnSortField | null) ?? "created_at";
+  const sortDirection = (searchParams.get("dir") as YarnSortDirection | null) ?? DEFAULT_SORT_DIRECTION[sortField];
   // Arrays from getAll() are a fresh reference every render — join into a stable string
   // for the effect's dependency list so it doesn't refetch on every unrelated re-render.
   const colorKey = color.join(",");
@@ -54,7 +72,7 @@ function YarnsListContent() {
       return;
     }
     let cancelled = false;
-    listYarns(user.id, { q, color, manufacturer, material, thickness })
+    listYarns(user.id, { q, color, manufacturer, material, thickness, sortField, sortDirection })
       .then((result) => {
         if (cancelled) return;
         setYarns(result.yarns);
@@ -67,7 +85,7 @@ function YarnsListContent() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- colorKey/materialKey/thicknessKey stand in for color/material/thickness
-  }, [user, q, manufacturer, colorKey, materialKey, thicknessKey]);
+  }, [user, q, manufacturer, colorKey, materialKey, thicknessKey, sortField, sortDirection]);
 
   function submitFilters(formData: FormData) {
     const params = new URLSearchParams();
@@ -78,6 +96,18 @@ function YarnsListContent() {
     for (const v of formData.getAll("color")) params.append("color", String(v));
     for (const v of formData.getAll("material")) params.append("material", String(v));
     for (const v of formData.getAll("thickness")) params.append("thickness", String(v));
+    // Keep the current sort — filtering shouldn't silently reset how the list is ordered.
+    if (searchParams.get("sort")) params.set("sort", searchParams.get("sort")!);
+    if (searchParams.get("dir")) params.set("dir", searchParams.get("dir")!);
+    router.push(params.size > 0 ? `/yarn/yarns?${params}` : "/yarn/yarns");
+  }
+
+  function updateSort(field: YarnSortField, direction: YarnSortDirection) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (field === "created_at") params.delete("sort");
+    else params.set("sort", field);
+    if (direction === DEFAULT_SORT_DIRECTION[field]) params.delete("dir");
+    else params.set("dir", direction);
     router.push(params.size > 0 ? `/yarn/yarns?${params}` : "/yarn/yarns");
   }
 
@@ -94,6 +124,31 @@ function YarnsListContent() {
           + 毛糸を登録
         </Link>
       </div>
+
+      {user && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs text-stone-500">並び替え</span>
+          <select
+            value={sortField}
+            onChange={(e) => updateSort(e.target.value as YarnSortField, DEFAULT_SORT_DIRECTION[e.target.value as YarnSortField])}
+            className={selectClass}
+          >
+            {(Object.keys(SORT_FIELD_LABELS) as YarnSortField[]).map((field) => (
+              <option key={field} value={field}>
+                {SORT_FIELD_LABELS[field]}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => updateSort(sortField, sortDirection === "asc" ? "desc" : "asc")}
+            className="flex items-center gap-1 rounded-md border border-stone-300 px-2.5 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+          >
+            {sortDirection === "asc" ? "昇順" : "降順"}
+            <SortDirectionIcon direction={sortDirection} />
+          </button>
+        </div>
+      )}
 
       {user && (
         <div className="rounded-lg border border-[#5BC8AC26] bg-white">
@@ -262,6 +317,20 @@ function ChevronIcon({ open }: { open: boolean }) {
       style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
     >
       <path d="M4 6l4 4 4-4" stroke="#5BC8AC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SortDirectionIcon({ direction }: { direction: YarnSortDirection }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d={direction === "asc" ? "M3 9l4-4 4 4" : "M3 5l4 4 4-4"}
+        stroke="#5BC8AC"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
