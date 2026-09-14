@@ -11,6 +11,7 @@ const TOC = [
   { href: "#editor", label: "編み図メーカー" },
   { href: "#yarn", label: "毛糸管理" },
   { href: "#counter", label: "編み物カウンター" },
+  { href: "#color-matching", label: "配色マッチング" },
 ] as const;
 
 export default function GuidePage() {
@@ -109,6 +110,24 @@ export default function GuidePage() {
 
           <Feature title="リセット" image="/guide/counter-reset-confirm.png" imageAlt="すべてリセットの確認表示">
             カウンターごとの個別リセットはカード内から、すべてまとめてリセットする場合は画面下部のボタンから行えます。「すべてリセット」は誤って押してしまわないよう、1回目のタップで確認表示に変わり、もう一度押すと実行される2段階方式になっています。
+          </Feature>
+        </GuideSection>
+
+        <GuideSection
+          id="color-matching"
+          title="配色マッチング"
+          intro="お手持ちの毛糸に近い色と、仕上げたい雰囲気を選ぶと、合わせやすい配色を提案するツールです。"
+        >
+          <Feature title="基準色と雰囲気を選ぶ">
+            14色のスウォッチをタップするか、カラーピッカーで色を直接指定して基準色を選びます。続けて「エレガント」「ポップ」「シック」など8種類の雰囲気から1つ選ぶと、「配色を見る」ボタンが押せるようになります。
+          </Feature>
+
+          <Feature title="配色パターンを見る">
+            基準色と雰囲気から関連色を4色生成し、基準色と組み合わせた3色パターンを3種類表示します。各色はHEXコードで表示されるので、実際の毛糸選びの目安にできます。気に入らなければ「選び直す」で最初からやり直せます。
+          </Feature>
+
+          <Feature title="この配色に近い毛糸">
+            パターンの下に、生成された配色に近い毛糸へのリンク欄を用意しています（現在準備中）。今後、毛糸の登録情報と色を紐づけて、生成した配色に近い毛糸をここから探せるようにする予定です。
           </Feature>
         </GuideSection>
       </main>

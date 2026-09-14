@@ -38,6 +38,15 @@ const TOOLS = [
     iconColor: "#D4C220",
     iconSrc: "/icons/counter-icon.webp",
   },
+  {
+    key: "color-matching",
+    title: "配色マッチング",
+    description: "毛糸の色と雰囲気から配色を提案",
+    buttonLabel: "配色を見てみる",
+    href: "/color-matching",
+    iconColor: "#98DBC6",
+    iconSrc: "/icons/color-matching-icon.webp",
+  },
 ] as const;
 
 const SNS_LINKS = [
