@@ -16,6 +16,7 @@ interface CounterState {
   counters: KnittingCounter[];
   nextId: number;
   addCounter: () => void;
+  removeCounter: (id: number) => void;
   renameCounter: (id: number, name: string) => void;
   increment: (id: number) => void;
   decrement: (id: number) => void;
@@ -38,6 +39,11 @@ export const useCounterStore = create<CounterState>()(
                 nextId: s.nextId + 1,
               },
         ),
+
+      // The UI only shows this for counters other than the first, but guard here too
+      // so there's never a way to end up with zero counters.
+      removeCounter: (id) =>
+        set((s) => (s.counters.length <= 1 ? s : { counters: s.counters.filter((c) => c.id !== id) })),
 
       renameCounter: (id, name) =>
         set((s) => ({ counters: s.counters.map((c) => (c.id === id ? { ...c, name } : c)) })),

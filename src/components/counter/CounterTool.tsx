@@ -24,6 +24,7 @@ function formatLastUpdated(ms: number | null) {
 export function CounterTool() {
   const counters = useCounterStore((s) => s.counters);
   const addCounter = useCounterStore((s) => s.addCounter);
+  const removeCounter = useCounterStore((s) => s.removeCounter);
   const renameCounter = useCounterStore((s) => s.renameCounter);
   const increment = useCounterStore((s) => s.increment);
   const decrement = useCounterStore((s) => s.decrement);
@@ -72,6 +73,8 @@ export function CounterTool() {
             onIncrement={() => increment(counter.id)}
             onDecrement={() => decrement(counter.id)}
             onReset={() => resetOne(counter.id)}
+            // The first counter always stays, so only later ones get a delete button.
+            onDelete={i === 0 ? undefined : () => removeCounter(counter.id)}
           />
         ))}
       </div>
@@ -124,6 +127,7 @@ function CounterCard({
   onIncrement,
   onDecrement,
   onReset,
+  onDelete,
 }: {
   counter: KnittingCounter;
   accentClass: string;
@@ -131,16 +135,29 @@ function CounterCard({
   onIncrement: () => void;
   onDecrement: () => void;
   onReset: () => void;
+  onDelete?: () => void;
 }) {
   return (
     <div className="rounded-2xl bg-white p-4" style={{ border: "1px solid #CDEBE1" }}>
-      <input
-        value={counter.name}
-        onChange={(e) => onRename(e.target.value)}
-        maxLength={12}
-        className="w-full border-b border-dashed border-[#CDEBE1] bg-transparent pb-1.5 text-[15px] font-semibold outline-none focus:border-[#E6D72A]"
-        style={{ color: "#3D6B5C" }}
-      />
+      <div className="flex items-start gap-2">
+        <input
+          value={counter.name}
+          onChange={(e) => onRename(e.target.value)}
+          maxLength={12}
+          className="w-full min-w-0 flex-1 border-b border-dashed border-[#CDEBE1] bg-transparent pb-1.5 text-[15px] font-semibold outline-none focus:border-[#E6D72A]"
+          style={{ color: "#3D6B5C" }}
+        />
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="shrink-0 whitespace-nowrap p-1 text-[11px]"
+            style={{ color: "#9AA5A2" }}
+          >
+            削除
+          </button>
+        )}
+      </div>
 
       <div className="mt-2.5 flex flex-wrap gap-1.5">
         {COUNTER_PRESETS.map((preset) => (
