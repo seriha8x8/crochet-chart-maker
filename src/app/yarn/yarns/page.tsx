@@ -35,6 +35,13 @@ function YarnsListContent() {
   const [yarns, setYarns] = useState<Yarn[] | null>(null);
   const [facets, setFacets] = useState<YarnFacets>(EMPTY_FACETS);
   const [error, setError] = useState<string | null>(null);
+  // Closed by default so the filter form doesn't push the list down — but if a filter
+  // is already applied (e.g. from a link or a page reload), open it so it's not hidden.
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => q.length > 0 || manufacturer.length > 0 || color.length > 0 || material.length > 0 || thickness.length > 0,
+  );
+  const activeFilterCount =
+    (q ? 1 : 0) + (manufacturer ? 1 : 0) + color.length + material.length + thickness.length;
 
   useEffect(() => {
     // Still resolving the browser session — wait rather than flashing the empty state.
@@ -88,65 +95,86 @@ function YarnsListContent() {
       </div>
 
       {user && (
-        <form
-          className="flex flex-col gap-4 rounded-lg border border-[#5BC8AC26] bg-white p-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitFilters(new FormData(e.currentTarget));
-          }}
-        >
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-xs text-stone-500">
-              フリーワード検索
-              <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-stone-500">
-              メーカー
-              <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
-                <option value="">すべて</option>
-                {facets.manufacturer.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <div className="rounded-lg border border-[#5BC8AC26] bg-white">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-[#3D6B5C]"
+            aria-expanded={filtersOpen}
+          >
+            <span>
+              検索・絞り込み
+              {activeFilterCount > 0 && (
+                <span className="ml-1.5 rounded-full bg-[#EAF7F2] px-2 py-0.5 text-xs font-medium text-[#2f6f61]">
+                  {activeFilterCount}件指定中
+                </span>
+              )}
+            </span>
+            <ChevronIcon open={filtersOpen} />
+          </button>
 
-          <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
-            <legend className="mb-0.5">色（複数選択可）</legend>
-            <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={color} />
-          </fieldset>
-
-          <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
-            <legend className="mb-0.5">素材（複数選択可）</legend>
-            <CheckboxChips name="material" options={[...YARN_MATERIALS]} defaultValues={material} />
-          </fieldset>
-
-          <fieldset className="flex flex-col gap-2 text-xs text-stone-500">
-            <legend className="mb-0.5">太さ（複数選択可）</legend>
-            <div className="flex flex-col gap-1">
-              <span className="font-medium">棒針</span>
-              <CheckboxChips name="thickness" options={KNITTING_NEEDLE_SIZES} defaultValues={thickness} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-medium">かぎ針</span>
-              <CheckboxChips name="thickness" options={CROCHET_HOOK_SIZES} defaultValues={thickness} />
-            </div>
-          </fieldset>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
+          {filtersOpen && (
+            <form
+              className="flex flex-col gap-4 border-t border-[#5BC8AC26] p-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitFilters(new FormData(e.currentTarget));
+              }}
             >
-              絞り込む
-            </button>
-            <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
-              リセット
-            </Link>
-          </div>
-        </form>
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1 text-xs text-stone-500">
+                  フリーワード検索
+                  <input type="text" name="q" defaultValue={q} placeholder="名前・メーカー名" className={selectClass} />
+                </label>
+                <label className="flex flex-col gap-1 text-xs text-stone-500">
+                  メーカー
+                  <select name="manufacturer" defaultValue={manufacturer} className={selectClass}>
+                    <option value="">すべて</option>
+                    {facets.manufacturer.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
+                <legend className="mb-0.5">色（複数選択可）</legend>
+                <CheckboxChips name="color" options={[...YARN_COLORS]} defaultValues={color} />
+              </fieldset>
+
+              <fieldset className="flex flex-col gap-1.5 text-xs text-stone-500">
+                <legend className="mb-0.5">素材（複数選択可）</legend>
+                <CheckboxChips name="material" options={[...YARN_MATERIALS]} defaultValues={material} />
+              </fieldset>
+
+              <fieldset className="flex flex-col gap-2 text-xs text-stone-500">
+                <legend className="mb-0.5">太さ（複数選択可）</legend>
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">棒針</span>
+                  <CheckboxChips name="thickness" options={KNITTING_NEEDLE_SIZES} defaultValues={thickness} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">かぎ針</span>
+                  <CheckboxChips name="thickness" options={CROCHET_HOOK_SIZES} defaultValues={thickness} />
+                </div>
+              </fieldset>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  className="rounded-md border border-[#F18D9E] px-3 py-1.5 text-sm text-stone-700 hover:bg-[#FCE7EA]"
+                >
+                  絞り込む
+                </button>
+                <Link href="/yarn/yarns" className="text-sm text-[#5BC8AC] underline">
+                  リセット
+                </Link>
+              </div>
+            </form>
+          )}
+        </div>
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -218,5 +246,21 @@ export default function YarnsPage() {
         <YarnsListContent />
       </Suspense>
     </YarnPublicShell>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      className="shrink-0 transition-transform"
+      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+    >
+      <path d="M4 6l4 4 4-4" stroke="#5BC8AC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

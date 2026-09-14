@@ -36,6 +36,11 @@ export function YarnForm({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoFieldKey, setPhotoFieldKey] = useState(0);
   const [manufacturerOptions, setManufacturerOptions] = useState<string[]>([]);
+  // Tracks edits since the last successful save, so an already-saved yarn's button can show
+  // "保存済み" (and stay disabled) until something actually changes again.
+  const [dirty, setDirty] = useState(false);
+  const isEditingExisting = Boolean(yarn);
+  const showSaved = isEditingExisting && !dirty && !pending;
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +85,7 @@ export function YarnForm({
     setError(null);
     try {
       const result = await onSubmit(fields, { removePhoto, file: photoFile });
+      setDirty(false);
       if ("createdName" in result) {
         setSuccessMessage(`「${result.createdName}」を登録しました。続けて登録できます。`);
         form.reset();
@@ -110,7 +116,11 @@ export function YarnForm({
           </Link>
         </div>
       )}
-      <form onSubmit={handleSubmit} className="flex max-w-lg flex-col gap-5">
+      <form
+        onSubmit={handleSubmit}
+        onChange={() => setDirty(true)}
+        className="flex max-w-lg flex-col gap-5"
+      >
         <label className="flex flex-col gap-1 text-sm">
           名前
           <input name="name" required defaultValue={yarn?.name} className={fieldClass} />
@@ -181,13 +191,30 @@ export function YarnForm({
 
         <button
           type="submit"
-          disabled={pending}
-          className="rounded-md bg-[#5BC8AC] px-4 py-2 font-medium text-white hover:bg-[#46A68D] disabled:opacity-50"
+          disabled={pending || showSaved}
+          className="flex items-center justify-center gap-1.5 rounded-md bg-[#5BC8AC] px-4 py-2 font-medium text-white hover:bg-[#46A68D] disabled:opacity-50 disabled:hover:bg-[#5BC8AC]"
         >
-          {pending ? "保存中..." : "保存"}
+          {pending ? (
+            "保存中..."
+          ) : showSaved ? (
+            <>
+              <CheckIcon />
+              保存済み
+            </>
+          ) : (
+            "保存"
+          )}
         </button>
       </form>
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M2.5 7.5l3 3 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
