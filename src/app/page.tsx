@@ -72,12 +72,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-8">
         <section className="flex flex-col items-center gap-4 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
-          <img
-            src="/image0.jpeg"
-            alt="rii's crochet tools"
-            className="h-24 w-24 rounded-full object-cover"
-            style={{ border: "3px solid #5BC8AC" }}
-          />
+          <img src="/icons/logo-bear.png" alt="rii's crochet tools" className="h-24 w-24 object-contain" />
           <h1 className="text-3xl font-bold" style={{ color: "#3D6B5C" }}>
             rii&apos;s crochet tools
           </h1>
