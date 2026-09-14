@@ -84,7 +84,7 @@ function YarnDetailContent() {
             {usages.map((usage) => (
               <li key={usage.id}>
                 <Link
-                  href={`/yarn/projects/detail?id=${usage.project?.id}`}
+                  href={`/works/detail?id=${usage.project?.id}`}
                   className="flex items-center justify-between rounded-md border border-[#5BC8AC26] bg-white px-4 py-3 hover:border-[#5BC8AC66] hover:bg-[#D8F0E8]/70"
                 >
                   <span>{usage.project?.title}</span>

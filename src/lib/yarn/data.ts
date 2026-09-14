@@ -225,8 +225,9 @@ export async function deleteYarn(userId: string, yarnId: string): Promise<void> 
 
 // --- Projects --------------------------------------------------------------
 
-export type ProjectFields = { title: string; made_on: string | null };
+export type ProjectFields = { title: string; made_on: string | null; genre: string | null };
 export type YarnSelection = { yarn_id: string; used_count: number };
+export type ProjectFilters = { genre?: string };
 
 async function decrementStock(supabase: SupabaseClient, userId: string, selections: YarnSelection[]) {
   for (const selection of selections) {
@@ -247,14 +248,16 @@ async function decrementStock(supabase: SupabaseClient, userId: string, selectio
   }
 }
 
-export async function listProjects(userId: string): Promise<Project[]> {
+export async function listProjects(userId: string, filters: ProjectFilters = {}): Promise<Project[]> {
   const supabase = requireSupabase();
-  const { data } = await supabase
+  let query = supabase
     .from("projects")
     .select("*")
     .eq("user_id", userId)
     .order("made_on", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
+  if (filters.genre) query = query.eq("genre", filters.genre);
+  const { data } = await query;
   return data ?? [];
 }
 

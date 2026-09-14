@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-export default function YarnLoginPage() {
+function YarnLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Signed-out visitors get bounced here from whichever app they were on (毛糸管理 or
+  // 作品管理, which share this same login) — send them back there instead of always to 毛糸管理.
+  const next = searchParams.get("next") || "/yarn/yarns";
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,12 +23,12 @@ export default function YarnLoginPage() {
     supabase.auth
       .getUser()
       .then(({ data }) => {
-        if (data.user) router.replace("/yarn/yarns");
+        if (data.user) router.replace(next);
       })
       .catch(() => {
         // Network hiccup: just stay on the login form.
       });
-  }, [router]);
+  }, [router, next]);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,12 +48,12 @@ export default function YarnLoginPage() {
           setError(error.message);
           return;
         }
-        router.replace("/yarn/yarns");
+        router.replace(next);
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/yarn/yarns` },
+          options: { emailRedirectTo: `${window.location.origin}${next}` },
         });
         if (error) {
           setError(error.message);
@@ -59,7 +63,7 @@ export default function YarnLoginPage() {
           setMessage("確認メールを送信しました。メール内のリンクから登録を完了してください。");
           return;
         }
-        router.replace("/yarn/yarns");
+        router.replace(next);
       }
     } finally {
       setPending(false);
@@ -68,7 +72,7 @@ export default function YarnLoginPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold">毛糸管理アプリ</h1>
+      <h1 className="text-2xl font-semibold">毛糸管理・作品管理</h1>
       <div className="mx-auto flex w-full max-w-sm flex-col gap-6 rounded-lg border border-[#5BC8AC33] bg-white p-8">
         <div className="flex gap-2 text-sm">
           <button
@@ -137,5 +141,13 @@ export default function YarnLoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function YarnLoginPage() {
+  return (
+    <Suspense fallback={<p className="px-4 py-10 text-center text-sm text-stone-500">読み込み中…</p>}>
+      <YarnLoginContent />
+    </Suspense>
   );
 }

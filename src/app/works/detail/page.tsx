@@ -64,7 +64,7 @@ function ProjectDetailContent() {
           confirmMessage="この作品メモを削除しますか？"
           onDelete={async () => {
             await deleteProject(user.id, project.id);
-            router.push("/yarn/projects");
+            router.push("/works");
           }}
         />
       </div>

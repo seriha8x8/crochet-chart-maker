@@ -18,6 +18,7 @@ export type Project = {
   user_id: string;
   title: string;
   made_on: string | null;
+  genre: string | null;
   photo_url: string | null;
   created_at: string;
 };

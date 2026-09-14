@@ -1,10 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { YarnAppHeader } from "@/components/yarn/YarnAppHeader";
 
 /** undefined = auth state not resolved yet, null = signed out. */
 const YarnUserContext = createContext<User | null | undefined>(undefined);
@@ -52,26 +51,24 @@ function useYarnAuthState() {
   return user;
 }
 
-/** Hard-gates a page behind login: signed-out visitors are redirected to /yarn/login.
+/** Hard-gates a page behind login: signed-out visitors are redirected to /yarn/login,
+ *  carrying the current path so login can send them back to where they started (they
+ *  might have been on 作品管理, not 毛糸管理 — the two apps share this same login).
  *  Use for pages that only make sense once signed in (registering/editing something). */
 export function RequireYarnUser({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const user = useYarnAuthState();
 
   useEffect(() => {
-    if (user === null) router.replace("/yarn/login");
-  }, [user, router]);
+    if (user === null) router.replace(`/yarn/login?next=${encodeURIComponent(pathname)}`);
+  }, [user, router, pathname]);
 
   if (!user) {
     return <p className="px-4 py-10 text-center text-sm text-stone-500">読み込み中…</p>;
   }
 
-  return (
-    <YarnUserContext.Provider value={user}>
-      <YarnAppHeader />
-      {children}
-    </YarnUserContext.Provider>
-  );
+  return <YarnUserContext.Provider value={user}>{children}</YarnUserContext.Provider>;
 }
 
 /** Like RequireYarnUser, but never redirects — signed-out visitors still see the page
@@ -80,10 +77,5 @@ export function RequireYarnUser({ children }: { children: ReactNode }) {
 export function YarnPublicShell({ children }: { children: ReactNode }) {
   const user = useYarnAuthState();
 
-  return (
-    <YarnUserContext.Provider value={user}>
-      <YarnAppHeader />
-      {children}
-    </YarnUserContext.Provider>
-  );
+  return <YarnUserContext.Provider value={user}>{children}</YarnUserContext.Provider>;
 }

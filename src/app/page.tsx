@@ -30,6 +30,15 @@ const TOOLS = [
     iconSrc: "/icons/yarn-icon.webp",
   },
   {
+    key: "works",
+    title: "作品管理",
+    description: "編んだ作品を写真・ジャンルで記録",
+    buttonLabel: "作品を記録する",
+    href: "/works",
+    iconColor: "#F18D9E",
+    iconSrc: "/icons/works-icon.webp",
+  },
+  {
     key: "counter",
     title: "カウンター",
     description: "かぎ針編み・棒針編みの段数や目数をタップでカウント",
@@ -95,7 +104,7 @@ export default function HomePage() {
           </p>
         </section>
 
-        <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((tool) => (
             <div
               key={tool.key}

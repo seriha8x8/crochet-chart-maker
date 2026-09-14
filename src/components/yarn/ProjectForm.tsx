@@ -8,6 +8,7 @@ import { UpgradeRequiredError } from "@/lib/yarn/data";
 import { PhotoField } from "@/components/yarn/PhotoField";
 import { UpgradeModal } from "@/components/yarn/UpgradeModal";
 import { YarnPicker } from "@/components/yarn/YarnPicker";
+import { PROJECT_GENRES } from "@/lib/yarn/constants";
 
 const fieldClass =
   "rounded-md border border-stone-300 px-3 py-2 focus:border-[#5BC8AC] focus:outline-none focus:ring-2 focus:ring-[#5BC8AC33]";
@@ -59,7 +60,11 @@ export function ProjectForm({
       setError("作品名は必須です");
       return;
     }
-    const fields: ProjectFields = { title, made_on: String(data.get("made_on") ?? "").trim() || null };
+    const fields: ProjectFields = {
+      title,
+      made_on: String(data.get("made_on") ?? "").trim() || null,
+      genre: String(data.get("genre") ?? "").trim() || null,
+    };
 
     setPending(true);
     setError(null);
@@ -92,7 +97,7 @@ export function ProjectForm({
       {successMessage && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-[#5BC8AC66] bg-[#EAF7F2] px-4 py-3 text-sm text-[#2f6f61]">
           <span>{successMessage}</span>
-          <Link href="/yarn/projects" className="whitespace-nowrap font-medium underline">
+          <Link href="/works" className="whitespace-nowrap font-medium underline">
             一覧を見る
           </Link>
         </div>
@@ -105,6 +110,17 @@ export function ProjectForm({
         <label className="flex flex-col gap-1 text-sm">
           作った日
           <input type="date" name="made_on" defaultValue={project?.made_on ?? ""} className={fieldClass} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          ジャンル
+          <select name="genre" defaultValue={project?.genre ?? ""} className={fieldClass}>
+            <option value="">選択してください</option>
+            {PROJECT_GENRES.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
         </label>
 
         <YarnPicker yarns={yarns} selections={selections} onChange={setSelections} />

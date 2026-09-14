@@ -1,3 +1,24 @@
+/** Genre a 作品 (finished piece) belongs to — single-select. */
+export const PROJECT_GENRES = [
+  "トップス(ノースリーブ)",
+  "トップス(半袖)",
+  "トップス(長袖)",
+  "ボトムス(スカート)",
+  "ボトムス(パンツ)",
+  "ワンピース",
+  "靴下",
+  "手袋",
+  "アームウォーマー",
+  "バッグ(大)",
+  "バッグ(中)",
+  "バッグ(小)",
+  "ブランケット",
+  "インテリア",
+  "小物",
+  "アクセサリー",
+  "その他",
+] as const;
+
 /** Standard color categories for 毛糸 (yarn) — multi-select, since a single skein can span
  *  several colors (段染め / gradient-dyed yarn). */
 export const YARN_COLORS = [

@@ -10,6 +10,7 @@ const TOC = [
   { href: "#videos", label: "編み方動画" },
   { href: "#editor", label: "編み図メーカー" },
   { href: "#yarn", label: "毛糸管理" },
+  { href: "#works", label: "作品管理" },
   { href: "#counter", label: "カウンター" },
   { href: "#color-matching", label: "配色マッチング" },
 ] as const;
@@ -94,8 +95,17 @@ export default function GuidePage() {
           <Feature title="登録した毛糸を検索">
             色・素材・太さなどの条件で、登録した毛糸を絞り込み検索できます。作りたい作品に合う毛糸をすぐに見つけられます。
           </Feature>
-          <Feature title="編んだ作品をメモする">
-            使った毛糸と紐づけて、編んだ作品の記録をメモとして残せます。過去にどの毛糸で何を作ったかを振り返るのに便利です。
+        </GuideSection>
+
+        <GuideSection id="works" title="作品管理" intro="編んだ作品を写真やジャンルとともに記録できるツールです。毛糸管理とデータを共有しています。">
+          <Feature title="作品を登録">
+            作品名や作った日、写真とあわせて記録できます。毛糸を選ばなくても単独で登録でき、使った毛糸は後から紐づけることもできます。
+          </Feature>
+          <Feature title="毛糸と紐づける">
+            登録済みの毛糸から使ったものを選んで、使用した玉数も記録できます。毛糸の詳細ページからは、その毛糸を使った作品の一覧を確認できます。
+          </Feature>
+          <Feature title="ジャンルで絞り込み">
+            トップスやボトムス、バッグ、小物など17種類のジャンルから1つを選んで登録できます。作品一覧ではジャンルで絞り込み検索も可能です。
           </Feature>
         </GuideSection>
 
