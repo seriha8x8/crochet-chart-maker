@@ -53,7 +53,7 @@ export function CounterTool() {
         カウンター
       </h1>
       <p className="mt-1 text-sm leading-relaxed" style={{ color: "#7FA99A" }}>
-        カウンターは最大{MAX_COUNTERS}個まで増やせます。名前は自由に変更できます（例：段数、目数、●●色 など）。
+        かぎ針編み・棒針編みの段数や目数のカウントにおすすめ。カウンターは最大{MAX_COUNTERS}個まで増やせます。名前は自由に変更できます（例：段数、目数、●●色 など）。
       </p>
 
       <p className="mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed" style={{ backgroundColor: "#FFF7EC", color: "#8a7150" }}>

@@ -32,7 +32,7 @@ const TOOLS = [
   {
     key: "counter",
     title: "カウンター",
-    description: "タップで段数や目数をカウント可能",
+    description: "かぎ針編み・棒針編みの段数や目数をタップでカウント",
     buttonLabel: "カウンターを使う",
     href: "/counter",
     iconColor: "#D4C220",

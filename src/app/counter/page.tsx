@@ -5,6 +5,7 @@ import { CounterTool } from "@/components/counter/CounterTool";
 
 export const metadata: Metadata = {
   title: "カウンター - rii's crochet tools",
+  description: "かぎ針編み・棒針編みの段数や目数をタップでカウントできる無料ツール。名前を自由に変更できるカウンターを複数作成できます。",
 };
 
 export default function CounterPage() {
