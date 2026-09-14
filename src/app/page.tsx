@@ -30,15 +30,6 @@ const TOOLS = [
     iconSrc: "/icons/yarn-icon.webp",
   },
   {
-    key: "works",
-    title: "作品管理",
-    description: "編んだ作品を写真・ジャンルで記録",
-    buttonLabel: "作品を記録する",
-    href: "/works",
-    iconColor: "#F18D9E",
-    iconSrc: "/icons/works-icon.webp",
-  },
-  {
     key: "counter",
     title: "カウンター",
     description: "かぎ針編み・棒針編みの段数や目数をタップでカウント",
@@ -55,6 +46,15 @@ const TOOLS = [
     href: "/color-matching",
     iconColor: "#5BC8AC",
     iconSrc: "/icons/color-matching-icon.webp",
+  },
+  {
+    key: "works",
+    title: "作品管理",
+    description: "編んだ作品を写真・ジャンルで記録",
+    buttonLabel: "作品を記録する",
+    href: "/works",
+    iconColor: "#F18D9E",
+    iconSrc: "/icons/works-icon.webp",
   },
 ] as const;
 
