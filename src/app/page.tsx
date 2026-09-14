@@ -44,7 +44,7 @@ const TOOLS = [
     description: "毛糸の色と雰囲気から配色を提案",
     buttonLabel: "配色を見てみる",
     href: "/color-matching",
-    iconColor: "#98DBC6",
+    iconColor: "#5BC8AC",
     iconSrc: "/icons/color-matching-icon.webp",
   },
 ] as const;
