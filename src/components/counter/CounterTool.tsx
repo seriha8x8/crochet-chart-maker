@@ -56,6 +56,10 @@ export function CounterTool() {
         カウンターは最大{MAX_COUNTERS}個まで増やせます。名前は自由に変更できます（例：段数、目数、●●色 など）。
       </p>
 
+      <p className="mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed" style={{ backgroundColor: "#FFF7EC", color: "#8a7150" }}>
+        カウントはこの端末のブラウザ内だけに保存されます。ログインしていても、別の端末やブラウザで開いた場合は引き継がれませんのでご注意ください。
+      </p>
+
       <div
         className="my-5 h-1.5 rounded-full opacity-70"
         style={{
