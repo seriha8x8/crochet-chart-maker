@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { label: "編み方動画", href: "/videos", key: "videos", note: null },
   { label: "編み図メーカー", href: "/editor", key: "editor", note: "PC推奨" },
   { label: "毛糸管理", href: "/yarn/yarns", key: "yarn", note: null },
+  { label: "編み物カウンター", href: "/counter", key: "counter", note: null },
 ] as const;
 
 type NavKey = "home" | (typeof NAV_LINKS)[number]["key"];
