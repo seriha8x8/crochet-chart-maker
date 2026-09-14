@@ -10,7 +10,7 @@ const TOC = [
   { href: "#videos", label: "編み方動画" },
   { href: "#editor", label: "編み図メーカー" },
   { href: "#yarn", label: "毛糸管理" },
-  { href: "#counter", label: "編み物カウンター" },
+  { href: "#counter", label: "カウンター" },
   { href: "#color-matching", label: "配色マッチング" },
 ] as const;
 
@@ -99,7 +99,7 @@ export default function GuidePage() {
           </Feature>
         </GuideSection>
 
-        <GuideSection id="counter" title="編み物カウンター" intro="編み物中に段数・目数・色替えなどをタップでカウントできるツールです。">
+        <GuideSection id="counter" title="カウンター" intro="編み物中に段数・目数・色替えなどをタップでカウントできるツールです。">
           <Feature title="カウンターを増やす" image="/guide/counter-card.png" imageAlt="名前とプリセットチップを設定したカウンターカード">
             最大8個までカウンターを追加できます。名前は自由入力のほか、「段数」「目数」「色1」〜「色3」のプリセットチップからも選べるので、増し目や配色の変わり目など複数のカウントを同時に管理できます。
           </Feature>

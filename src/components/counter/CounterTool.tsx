@@ -50,7 +50,7 @@ export function CounterTool() {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-8 sm:px-0" style={{ WebkitTapHighlightColor: "transparent" }}>
       <h1 className="text-2xl font-bold" style={{ color: "#3D6B5C" }}>
-        編み物カウンター
+        カウンター
       </h1>
       <p className="mt-1 text-sm leading-relaxed" style={{ color: "#7FA99A" }}>
         カウンターは最大{MAX_COUNTERS}個まで増やせます。名前は自由に変更できます（例：段数、目数、●●色 など）。

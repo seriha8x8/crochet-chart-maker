@@ -31,7 +31,7 @@ const TOOLS = [
   },
   {
     key: "counter",
-    title: "編み物カウンター",
+    title: "カウンター",
     description: "タップで段数や目数をカウント可能",
     buttonLabel: "カウンターを使う",
     href: "/counter",

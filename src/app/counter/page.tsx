@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CounterTool } from "@/components/counter/CounterTool";
 
 export const metadata: Metadata = {
-  title: "編み物カウンター - rii's crochet tools",
+  title: "カウンター - rii's crochet tools",
 };
 
 export default function CounterPage() {
