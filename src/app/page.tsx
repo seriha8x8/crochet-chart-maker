@@ -29,6 +29,15 @@ const TOOLS = [
     iconColor: "#F18D9E",
     iconSrc: "/icons/yarn-icon.webp",
   },
+  {
+    key: "counter",
+    title: "編み物カウンター",
+    description: "段数・目数・色替えをタップで記録",
+    buttonLabel: "カウンターを使う",
+    href: "/counter",
+    iconColor: "#5FB79B",
+    iconBg: "#98DBC6",
+  },
 ] as const;
 
 const SNS_LINKS = [
@@ -77,15 +86,24 @@ export default function HomePage() {
           </p>
         </section>
 
-        <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {TOOLS.map((tool) => (
             <div
               key={tool.key}
               className="flex flex-col items-center gap-4 rounded-2xl p-8 text-center"
               style={{ backgroundColor: "#FFFFFF", border: "1px solid #CDEBE1" }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available */}
-              <img src={tool.iconSrc} alt="" className="h-16 w-16 rounded-full object-cover" />
+              {"iconSrc" in tool ? (
+                // eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer available
+                <img src={tool.iconSrc} alt="" className="h-16 w-16 rounded-full object-cover" />
+              ) : (
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-full"
+                  style={{ backgroundColor: tool.iconBg, color: tool.iconColor }}
+                >
+                  <TallyIcon />
+                </div>
+              )}
 
               <h2 className="text-lg font-semibold" style={{ color: "#3D6B5C" }}>
                 {tool.title}
@@ -131,6 +149,19 @@ export default function HomePage() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+function TallyIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+      <path
+        d="M6 6v16M11.3 6v16M16.7 6v16M22 6v16M4 18l20-10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
