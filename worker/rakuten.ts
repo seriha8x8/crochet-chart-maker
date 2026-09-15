@@ -43,13 +43,21 @@ export async function searchYarnByColorName(
   let res: Response;
   try {
     res = await fetch(url.toString());
-  } catch {
+  } catch (err) {
+    console.error("[rakuten] fetch failed", err);
     return [];
   }
-  if (!res.ok) return [];
+  if (!res.ok) {
+    console.error("[rakuten] non-ok response", res.status, await res.text().catch(() => ""));
+    return [];
+  }
 
   const data = (await res.json()) as RakutenSearchResponse;
-  if (data.error || !data.Items) return [];
+  if (data.error) {
+    console.error("[rakuten] api error", data.error, data.error_description);
+    return [];
+  }
+  if (!data.Items) return [];
 
   return data.Items.map(({ Item }) => ({
     name: Item.itemName,

@@ -293,7 +293,7 @@ export function ColorMatchingTool() {
                 })}
               </div>
               <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#7FA99A" }}>
-                商品情報は楽天市場の検索結果です。リンクは提携リンクを含みます。
+                商品情報は楽天市場の検索結果です。リンクはPRを含みます。
               </p>
             </div>
 

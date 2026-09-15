@@ -29,7 +29,7 @@ function parseColors(request: Request): string[] {
   return Array.from(seen);
 }
 
-/** Shared by the Cloudflare Pages Function route (functions/api/yarn-suggestions.ts).
+/** Called from worker/index.ts for GET /api/yarn-suggestions?colors=RRGGBB,...
  *  Resolves each requested hex to a color name, checks the Cache API for that name's
  *  search results before calling Rakuten, and returns one entry per requested hex —
  *  `products: []` when nothing was found (or Rakuten errored), which the frontend
@@ -44,6 +44,7 @@ export async function handleYarnSuggestions(
     return Response.json({ results: [] satisfies ColorSuggestion[] }, { status: 400 });
   }
   if (!env.RAKUTEN_APP_ID) {
+    console.error("[yarn-suggestions] RAKUTEN_APP_ID is not set");
     return Response.json({ error: "rakuten_not_configured", results: [] }, { status: 500 });
   }
 

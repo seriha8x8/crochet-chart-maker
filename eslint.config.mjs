@@ -12,9 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Cloudflare Pages Functions: Workers runtime, not the Next.js app — different
-    // globals (Response.json, caches.default) that this config's rules don't know about.
-    "functions/**",
+    // Cloudflare Worker: Workers runtime, not the Next.js app — different globals
+    // (Response.json, caches.default) that this config's rules don't know about.
+    "worker/**",
   ]),
 ]);
 
