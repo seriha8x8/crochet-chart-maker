@@ -74,7 +74,10 @@ export async function searchYarnByColorName(
 
   let res: Response;
   try {
-    res = await fetch(url.toString());
+    // This access key is domain-restricted — the gateway checks the request's Referer
+    // against whatever site was registered for it. A server-to-server fetch() (this is a
+    // Cloudflare Worker, not a browser navigating a page) doesn't send one on its own.
+    res = await fetch(url.toString(), { headers: { Referer: "https://riiscrochet-tools.com/" } });
   } catch (err) {
     const debug = `fetch failed: ${String(err)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
