@@ -61,10 +61,11 @@ export async function handleYarnSuggestions(
       const colorName = nearestColorName(`#${hex}`);
       // Versioned so a code/behavior change (like no longer caching failures, the v3 fix
       // to nearestColorName's distance metric, the v4 addition of low-saturation named
-      // colors, the v5 rename of those to established searchable terms, or the v6 addition
-      // of high-saturation duplicate entries) can't keep getting masked by entries an
-      // older version of this code wrote under the same key.
-      const cacheKey = new Request(`https://yarn-suggestions.internal/v6/${encodeURIComponent(colorName)}`);
+      // colors, the v5 rename of those to established searchable terms, the v6 addition of
+      // high-saturation duplicate entries, or the v7 genreId restriction to the 毛糸
+      // category) can't keep getting masked by entries an older version of this code wrote
+      // under the same key.
+      const cacheKey = new Request(`https://yarn-suggestions.internal/v7/${encodeURIComponent(colorName)}`);
 
       const cached = await cache.match(cacheKey);
       if (cached) {

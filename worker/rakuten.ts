@@ -11,6 +11,12 @@ export type YarnProduct = {
 // into the URL itself — per the current docs, 2026-07-01 is the live version.
 const SEARCH_ENDPOINT = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 
+// Restricts results to Rakuten Ichiba's 毛糸 (yarn) category, found via the "毛糸"
+// category page at rakuten.co.jp/category/401038/ — without this, a plain keyword search
+// (e.g. "抹茶グリーン 毛糸") also surfaces finished goods (neck warmers, knit hats) whose
+// description just happens to list every color they come in, "毛糸" included.
+const YARN_GENRE_ID = "401038";
+
 type RakutenItem = {
   itemName: string;
   itemPrice: number;
@@ -69,6 +75,7 @@ export async function searchYarnByColorName(
   url.searchParams.set("accessKey", trimmedAccessKey);
   url.searchParams.set("applicationId", trimmedAppId);
   if (trimmedAffiliateId) url.searchParams.set("affiliateId", trimmedAffiliateId);
+  url.searchParams.set("genreId", YARN_GENRE_ID);
   url.searchParams.set("hits", "2");
   url.searchParams.set("imageFlag", "1");
 
