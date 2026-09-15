@@ -83,7 +83,15 @@ export async function searchYarnByColorName(
     // silently drops it there. The spec-correct way to control it is the separate
     // `referrer` field on the request init, which the runtime turns into the actual
     // outgoing Referer header.
-    res = await fetch(url.toString(), { referrer: "https://riiscrochet-tools.com/" });
+    //
+    // `referrer` alone wasn't enough either: the default `referrerPolicy` computes what to
+    // send based on the "referring page"'s origin, which doesn't really exist inside a
+    // Worker (there's no page) — that computation can collapse to sending nothing at all.
+    // `unsafe-url` skips the computation and always sends the full referrer URL as given.
+    res = await fetch(url.toString(), {
+      referrer: "https://riiscrochet-tools.com/",
+      referrerPolicy: "unsafe-url",
+    });
   } catch (err) {
     const debug = `fetch failed: ${String(err)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
