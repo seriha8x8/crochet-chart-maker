@@ -6,7 +6,7 @@ export interface YarnSuggestionsEnv {
   RAKUTEN_AFFILIATE_ID?: string;
 }
 
-export type ColorSuggestion = { hex: string; products: YarnProduct[] };
+export type ColorSuggestion = { hex: string; products: YarnProduct[]; debug?: string };
 
 const HEX_RE = /^[0-9A-F]{6}$/;
 /** 配色マッチング only ever sends its 4 generated colors (A/B/C/D) at once — cap well
@@ -64,17 +64,21 @@ export async function handleYarnSuggestions(
         return { hex, products };
       }
 
-      const products = await searchYarnByColorName(colorName, env.RAKUTEN_APP_ID!, env.RAKUTEN_AFFILIATE_ID ?? "");
+      const { products, debug } = await searchYarnByColorName(colorName, env.RAKUTEN_APP_ID!, env.RAKUTEN_AFFILIATE_ID ?? "");
 
-      const toCache = new Response(JSON.stringify(products), {
-        headers: {
-          "content-type": "application/json",
-          "cache-control": `public, max-age=${CACHE_TTL_SECONDS}`,
-        },
-      });
-      waitUntil(cache.put(cacheKey, toCache));
+      // Only cache genuine results — never a failure, or a real fix (e.g. a corrected
+      // credential) would stay masked by a cached "not found" for up to a day.
+      if (!debug) {
+        const toCache = new Response(JSON.stringify(products), {
+          headers: {
+            "content-type": "application/json",
+            "cache-control": `public, max-age=${CACHE_TTL_SECONDS}`,
+          },
+        });
+        waitUntil(cache.put(cacheKey, toCache));
+      }
 
-      return { hex, products };
+      return debug ? { hex, products, debug } : { hex, products };
     }),
   );
 

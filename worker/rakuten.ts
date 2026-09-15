@@ -23,6 +23,15 @@ type RakutenSearchResponse = {
   error_description?: string;
 };
 
+export type SearchResult = {
+  products: YarnProduct[];
+  /** Set only when products is empty for a reason other than a genuine 0-hit search —
+   *  surfaced in the API response (not just console.error) so it's visible straight from
+   *  the browser's Network tab without needing to dig through Cloudflare's Logs UI. Remove
+   *  this once "見つかりませんでした" is confirmed to only ever mean a genuine 0 hits. */
+  debug?: string;
+};
+
 /** Searches 楽天市場 for yarn matching a color name (already resolved from a generated
  *  palette color — see colorNames.ts). Returns the top 1-2 hits, or [] on no results or
  *  a Rakuten-side error (e.g. rate limit) — the caller falls back to a "not found" card
@@ -31,7 +40,7 @@ export async function searchYarnByColorName(
   colorName: string,
   appId: string,
   affiliateId: string,
-): Promise<YarnProduct[]> {
+): Promise<SearchResult> {
   const url = new URL(SEARCH_ENDPOINT);
   url.searchParams.set("format", "json");
   url.searchParams.set("keyword", `${colorName} 毛糸`);
@@ -44,26 +53,34 @@ export async function searchYarnByColorName(
   try {
     res = await fetch(url.toString());
   } catch (err) {
-    console.error("[rakuten] fetch failed", err);
-    return [];
+    const debug = `fetch failed: ${String(err)}`;
+    console.error("[rakuten]", debug);
+    return { products: [], debug };
   }
   if (!res.ok) {
-    console.error("[rakuten] non-ok response", res.status, await res.text().catch(() => ""));
-    return [];
+    const body = await res.text().catch(() => "");
+    const debug = `http ${res.status}: ${body.slice(0, 400)}`;
+    console.error("[rakuten]", debug);
+    return { products: [], debug };
   }
 
   const data = (await res.json()) as RakutenSearchResponse;
   if (data.error) {
-    console.error("[rakuten] api error", data.error, data.error_description);
-    return [];
+    const debug = `rakuten error: ${data.error} — ${data.error_description ?? ""}`;
+    console.error("[rakuten]", debug);
+    return { products: [], debug };
   }
-  if (!data.Items) return [];
+  if (!data.Items) {
+    return { products: [], debug: "response had no Items field" };
+  }
 
-  return data.Items.map(({ Item }) => ({
-    name: Item.itemName,
-    price: Item.itemPrice,
-    url: Item.affiliateUrl || Item.itemUrl,
-    imageUrl: Item.mediumImageUrls?.[0]?.imageUrl ?? null,
-    shopName: Item.shopName,
-  }));
+  return {
+    products: data.Items.map(({ Item }) => ({
+      name: Item.itemName,
+      price: Item.itemPrice,
+      url: Item.affiliateUrl || Item.itemUrl,
+      imageUrl: Item.mediumImageUrls?.[0]?.imageUrl ?? null,
+      shopName: Item.shopName,
+    })),
+  };
 }
