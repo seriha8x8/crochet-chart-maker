@@ -13,6 +13,15 @@ function colorHex(c: HSL & { hex?: string }): string {
   return c.hex ?? hslToHex(c.h, c.s, c.l);
 }
 
+/** Mirrors functions/_lib/rakuten.ts's YarnProduct — duplicated rather than imported
+ *  since that file ships in the separate Cloudflare Pages Functions build, not this app. */
+type YarnProduct = { name: string; price: number; url: string; imageUrl: string | null; shopName: string };
+type YarnSuggestions = Record<string, YarnProduct[]>;
+
+function hexKey(hex: string): string {
+  return hex.replace("#", "").toUpperCase();
+}
+
 export function ColorMatchingTool() {
   const [selectedColor, setSelectedColor] = useState<SelectedColor | null>(null);
   const [pickerHex, setPickerHex] = useState("#5BC8AC");
@@ -20,10 +29,46 @@ export function ColorMatchingTool() {
   const [selectedMoodId, setSelectedMoodId] = useState<string | null>(null);
   const [result, setResult] = useState<{ base: SelectedColor; palette: [HSL, HSL, HSL, HSL] } | null>(null);
 
+  const [suggestions, setSuggestions] = useState<YarnSuggestions | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (result) resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [result]);
+
+  // Look up "近い毛糸" for the 4 generated colors whenever a new palette is produced.
+  useEffect(() => {
+    if (!result) {
+      Promise.resolve().then(() => setSuggestions(null));
+      return;
+    }
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      setSuggestionsLoading(true);
+      setSuggestions(null);
+    });
+    const colors = result.palette.map((c) => hexKey(colorHex(c))).join(",");
+    fetch(`/api/yarn-suggestions?colors=${colors}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("request failed"))))
+      .then((data: { results: { hex: string; products: YarnProduct[] }[] }) => {
+        if (cancelled) return;
+        const map: YarnSuggestions = {};
+        for (const r of data.results) map[r.hex] = r.products;
+        setSuggestions(map);
+      })
+      .catch(() => {
+        // Treated the same as "no products for this color" per color below, rather than
+        // showing a scary error — the palette itself is still fully usable either way.
+        if (!cancelled) setSuggestions({});
+      })
+      .finally(() => {
+        if (!cancelled) setSuggestionsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [result]);
 
   function selectBaseColor(c: (typeof BASE_COLORS)[number]) {
@@ -190,26 +235,66 @@ export function ColorMatchingTool() {
               <p className="mb-2.5 text-sm font-bold" style={{ color: "#7FA99A" }}>
                 この配色に近い毛糸
               </p>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="flex flex-col gap-2.5">
                 {result.palette.map((c, i) => {
                   const hex = colorHex(c);
+                  const products = suggestions?.[hexKey(hex)];
                   return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 rounded-xl px-2.5 py-2.5"
-                      style={{ backgroundColor: "#EAF7F2", border: "1px dashed #CDEBE1" }}
-                    >
-                      <span
-                        className="h-[22px] w-[22px] shrink-0 rounded-full"
-                        style={{ backgroundColor: hex, border: "1px solid rgba(31,59,54,0.15)" }}
-                      />
-                      <span className="text-[10.5px] leading-snug" style={{ color: "#7FA99A" }}>
-                        {hex}に近い毛糸を見る（準備中）
-                      </span>
+                    <div key={i} className="rounded-xl p-2.5" style={{ backgroundColor: "#EAF7F2", border: "1px solid #CDEBE1" }}>
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <span
+                          className="h-[14px] w-[14px] shrink-0 rounded-full"
+                          style={{ backgroundColor: hex, border: "1px solid rgba(31,59,54,0.15)" }}
+                        />
+                        <span className="text-[10.5px]" style={{ color: "#7FA99A" }}>
+                          {hex}に近い毛糸
+                        </span>
+                      </div>
+
+                      {suggestionsLoading ? (
+                        <p className="text-[11px]" style={{ color: "#7FA99A" }}>
+                          検索中…
+                        </p>
+                      ) : !products || products.length === 0 ? (
+                        <p className="text-[11px]" style={{ color: "#7FA99A" }}>
+                          近い商品が見つかりませんでした
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          {products.map((p, pi) => (
+                            <a
+                              key={pi}
+                              href={p.url}
+                              target="_blank"
+                              rel="noopener noreferrer sponsored"
+                              className="flex items-center gap-2 rounded-lg bg-white p-1.5 hover:bg-[#FCE7EA]"
+                              style={{ border: "1px solid #CDEBE1" }}
+                            >
+                              {p.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element -- external Rakuten product image, not an optimizable local asset
+                                <img src={p.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-md object-cover" />
+                              ) : (
+                                <div className="h-12 w-12 shrink-0 rounded-md" style={{ backgroundColor: "#D8F0E8" }} />
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="line-clamp-2 text-[11px] leading-snug" style={{ color: "#3D6B5C" }}>
+                                  {p.name}
+                                </p>
+                                <p className="mt-0.5 text-[11px] font-bold" style={{ color: "#B2536D" }}>
+                                  ¥{p.price.toLocaleString()}
+                                </p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
+              <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#7FA99A" }}>
+                商品情報は楽天市場の検索結果です。リンクは提携リンクを含みます。
+              </p>
             </div>
 
             <div className="mt-2 flex justify-center">
