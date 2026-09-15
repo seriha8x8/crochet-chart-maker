@@ -6,7 +6,10 @@ export type YarnProduct = {
   shopName: string;
 };
 
-const SEARCH_ENDPOINT = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601";
+// Rakuten moved this API off app.rakuten.co.jp/services/api/... (what this pointed at
+// before, and what every request was failing against) to a new gateway host/path, dated
+// into the URL itself — per the current docs, 2026-07-01 is the live version.
+const SEARCH_ENDPOINT = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 
 type RakutenItem = {
   itemName: string;
