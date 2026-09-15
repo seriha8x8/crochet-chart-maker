@@ -77,7 +77,13 @@ export async function searchYarnByColorName(
     // This access key is domain-restricted — the gateway checks the request's Referer
     // against whatever site was registered for it. A server-to-server fetch() (this is a
     // Cloudflare Worker, not a browser navigating a page) doesn't send one on its own.
-    res = await fetch(url.toString(), { headers: { Referer: "https://riiscrochet-tools.com/" } });
+    //
+    // Referer can't be set through the `headers` map — it's a forbidden header name per
+    // the Fetch spec, so a fetch-spec-compliant implementation (which Workers' fetch is)
+    // silently drops it there. The spec-correct way to control it is the separate
+    // `referrer` field on the request init, which the runtime turns into the actual
+    // outgoing Referer header.
+    res = await fetch(url.toString(), { referrer: "https://riiscrochet-tools.com/" });
   } catch (err) {
     const debug = `fetch failed: ${String(err)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
