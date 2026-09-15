@@ -13,6 +13,14 @@
  *  low-saturation entries below fill that specific gap — don't remove them without
  *  covering the same low-saturation band some other way.
  *
+ *  The same problem happens at the other end: most entries top out around 40-55%
+ *  saturation, so a genuinely vivid generated color (70%+, e.g. a saturated magenta-purple)
+ *  gets pulled toward whichever named color is closest even though every candidate reads
+ *  as noticeably paler/duller than the target — e.g. a vivid magenta-purple landing on
+ *  "ラベンダー" and returning real but visually-mismatched pale lavender products. The
+ *  duplicate high-saturation entries below (same established name, closer hex) exist to
+ *  win those cases instead of the paler default, without introducing an unproven new term.
+ *
  *  The name is a Rakuten search keyword ("○○ 毛糸"), not just a color label — a
  *  perceptually-accurate but uncommon term (e.g. an invented "グレイッシュラベンダー")
  *  reliably returns zero hits even when the color match itself is right. Reusing an
@@ -44,6 +52,7 @@ const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "抹茶グリーン", hex: "#8AA05E" },
   { name: "グリーン", hex: "#6EA96E" },
   { name: "エメラルドグリーン", hex: "#2FA88A" },
+  { name: "エメラルドグリーン", hex: "#33E6B9" },
   { name: "モスグリーン", hex: "#5C6E4A" },
   { name: "ミントグリーン", hex: "#98DBC6" },
   { name: "ターコイズ", hex: "#5BC8AC" },
@@ -54,6 +63,7 @@ const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "水色", hex: "#8FCFEA" },
   { name: "ラベンダー", hex: "#B497D6" },
   { name: "パープル", hex: "#9A72B8" },
+  { name: "パープル", hex: "#AD24DB" },
   { name: "モーブ", hex: "#9C7B8B" },
   { name: "くすみラベンダー", hex: "#A79BB5" },
   { name: "くすみブルー", hex: "#9CACC0" },
