@@ -74,24 +74,14 @@ export async function searchYarnByColorName(
 
   let res: Response;
   try {
-    // This access key is domain-restricted — the gateway checks the request's Referer
-    // against whatever site was registered for it. A server-to-server fetch() (this is a
-    // Cloudflare Worker, not a browser navigating a page) doesn't send one on its own.
-    //
-    // Referer can't be set through the `headers` map — it's a forbidden header name per
-    // the Fetch spec, so a fetch-spec-compliant implementation (which Workers' fetch is)
-    // silently drops it there. The spec-correct way to control it is the separate
-    // `referrer` field on the request init, which the runtime turns into the actual
-    // outgoing Referer header.
-    //
-    // `referrer` alone wasn't enough either: the default `referrerPolicy` computes what to
-    // send based on the "referring page"'s origin, which doesn't really exist inside a
-    // Worker (there's no page) — that computation can collapse to sending nothing at all.
-    // `unsafe-url` skips the computation and always sends the full referrer URL as given.
-    res = await fetch(url.toString(), {
-      referrer: "https://riiscrochet-tools.com/",
-      referrerPolicy: "unsafe-url",
-    });
+    // This access key was originally registered as a "Webアプリケーション" (Referer-checked),
+    // and a Cloudflare Worker's fetch() turned out unable to make that check pass no matter
+    // how the Referer was set — headers, `referrer`, and `referrer`+`referrerPolicy` all
+    // produced the identical error against production. Workers apparently never transmits a
+    // custom Referer to the upstream origin. Re-registering the same app as
+    // "API/バックエンドサービス" switched it to IP allowlisting instead (Cloudflare's published
+    // edge ranges are now registered on the Rakuten side), which needs nothing special here.
+    res = await fetch(url.toString());
   } catch (err) {
     const debug = `fetch failed: ${String(err)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
