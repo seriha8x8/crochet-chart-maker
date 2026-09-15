@@ -3,6 +3,9 @@ import { searchYarnByColorName, type YarnProduct } from "./rakuten";
 
 export interface YarnSuggestionsEnv {
   RAKUTEN_APP_ID?: string;
+  /** openapi.rakuten.co.jp's separately-issued "アクセスキー" (pk_...) — distinct from
+   *  the legacy アプリID above, which this new gateway no longer accepts as auth. */
+  RAKUTEN_ACCESS_KEY?: string;
   RAKUTEN_AFFILIATE_ID?: string;
 }
 
@@ -43,8 +46,8 @@ export async function handleYarnSuggestions(
   if (hexes.length === 0) {
     return Response.json({ results: [] satisfies ColorSuggestion[] }, { status: 400 });
   }
-  if (!env.RAKUTEN_APP_ID) {
-    console.error("[yarn-suggestions] RAKUTEN_APP_ID is not set");
+  if (!env.RAKUTEN_APP_ID || !env.RAKUTEN_ACCESS_KEY) {
+    console.error("[yarn-suggestions] RAKUTEN_APP_ID or RAKUTEN_ACCESS_KEY is not set");
     return Response.json({ error: "rakuten_not_configured", results: [] }, { status: 500 });
   }
 
@@ -66,7 +69,12 @@ export async function handleYarnSuggestions(
         return { hex, products };
       }
 
-      const { products, debug } = await searchYarnByColorName(colorName, env.RAKUTEN_APP_ID!, env.RAKUTEN_AFFILIATE_ID ?? "");
+      const { products, debug } = await searchYarnByColorName(
+        colorName,
+        env.RAKUTEN_APP_ID!,
+        env.RAKUTEN_ACCESS_KEY!,
+        env.RAKUTEN_AFFILIATE_ID ?? "",
+      );
 
       // Only cache genuine results — never a failure, or a real fix (e.g. a corrected
       // credential) would stay masked by a cached "not found" for up to a day.

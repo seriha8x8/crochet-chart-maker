@@ -50,20 +50,23 @@ function maskedPreview(value: string): string {
 export async function searchYarnByColorName(
   colorName: string,
   appId: string,
+  accessKey: string,
   affiliateId: string,
 ): Promise<SearchResult> {
   // Trim defensively — a stray leading/trailing space or newline from copy-pasting the
   // value into Cloudflare's dashboard is enough for Rakuten to reject it as invalid.
   const trimmedAppId = appId.trim();
+  const trimmedAccessKey = accessKey.trim();
   const trimmedAffiliateId = affiliateId.trim();
-  const credentialInfo = `[applicationId ${maskedPreview(trimmedAppId)}]`;
+  const credentialInfo = `[accessKey ${maskedPreview(trimmedAccessKey)}]`;
 
   const url = new URL(SEARCH_ENDPOINT);
   url.searchParams.set("format", "json");
   url.searchParams.set("keyword", `${colorName} 毛糸`);
-  // The new openapi.rakuten.co.jp gateway wants this under "accessKey" — sending
-  // "applicationId" too in case it's still read as a fallback on this endpoint.
-  url.searchParams.set("accessKey", trimmedAppId);
+  // openapi.rakuten.co.jp's gateway auth is the separately-issued "アクセスキー" (pk_...),
+  // not the legacy アプリID — applicationId is still sent alongside since the response
+  // payload itself is still shaped around the classic IchibaItem Search API.
+  url.searchParams.set("accessKey", trimmedAccessKey);
   url.searchParams.set("applicationId", trimmedAppId);
   if (trimmedAffiliateId) url.searchParams.set("affiliateId", trimmedAffiliateId);
   url.searchParams.set("hits", "2");
