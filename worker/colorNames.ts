@@ -53,15 +53,46 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Nearest named color to `hex` by plain Euclidean RGB distance — good enough for a
- *  fuzzy "what should we search for" mapping, no need for perceptual color science here. */
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  const delta = max - min;
+  if (delta === 0) return { h: 0, s: 0, l };
+  const s = delta / (1 - Math.abs(2 * l - 1));
+  let h: number;
+  if (max === rn) h = 60 * (((gn - bn) / delta) % 6);
+  else if (max === gn) h = 60 * ((bn - rn) / delta + 2);
+  else h = 60 * ((rn - gn) / delta + 4);
+  if (h < 0) h += 360;
+  return { h, s, l };
+}
+
+/** Projects HSL onto a cylinder — saturation as radius, hue as angle, lightness as height —
+ *  so distance naturally wraps hue (0°/360° are adjacent) and, crucially, treats saturation
+ *  as a real axis. Plain RGB Euclidean distance pulled pale, low-saturation colors (e.g. a
+ *  soft lavender like #D6BDDB) toward gray/silver just because their R/G/B channels happen
+ *  to sit numerically close together, even though they read as clearly purple to the eye —
+ *  a saturated and a desaturated color at the same hue can still be adjacent in raw RGB. */
+function hslToCylinder(h: number, s: number, l: number): { x: number; y: number; z: number } {
+  const rad = (h * Math.PI) / 180;
+  return { x: s * Math.cos(rad), y: s * Math.sin(rad), z: l };
+}
+
+/** Nearest named color to `hex`, compared in the cylinder above — good enough for a fuzzy
+ *  "what should we search for" mapping, no need for full perceptual color science here. */
 export function nearestColorName(hex: string): string {
-  const target = hexToRgb(hex);
+  const targetRgb = hexToRgb(hex);
+  const targetHsl = rgbToHsl(targetRgb.r, targetRgb.g, targetRgb.b);
+  const target = hslToCylinder(targetHsl.h, targetHsl.s, targetHsl.l);
+
   let best = NAMED_COLORS[0];
   let bestDist = Infinity;
   for (const candidate of NAMED_COLORS) {
     const rgb = hexToRgb(candidate.hex);
-    const dist = (rgb.r - target.r) ** 2 + (rgb.g - target.g) ** 2 + (rgb.b - target.b) ** 2;
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    const point = hslToCylinder(hsl.h, hsl.s, hsl.l);
+    const dist = (point.x - target.x) ** 2 + (point.y - target.y) ** 2 + (point.z - target.z) ** 2;
     if (dist < bestDist) {
       bestDist = dist;
       best = candidate;
