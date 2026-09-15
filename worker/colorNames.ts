@@ -9,9 +9,18 @@
  *  (roughly 8-20%) but still has a discernible hue has no close match at that saturation
  *  level, so it loses on distance to a plain gray (which sits at 0% saturation and can be
  *  closer in the saturation/hue plane than any of the more saturated named colors are) even
- *  though a human would call it a muted/grayish version of that hue, not gray. The
- *  "グレイッシュ/アッシュ/ローズ/セージグレー" entries fill that specific gap — don't
- *  remove them without covering the same low-saturation band some other way. */
+ *  though a human would call it a muted/grayish version of that hue, not gray. The extra
+ *  low-saturation entries below fill that specific gap — don't remove them without
+ *  covering the same low-saturation band some other way.
+ *
+ *  The name is a Rakuten search keyword ("○○ 毛糸"), not just a color label — a
+ *  perceptually-accurate but uncommon term (e.g. an invented "グレイッシュラベンダー")
+ *  reliably returns zero hits even when the color match itself is right. Reusing an
+ *  established, high-traffic prefix like "くすみ" (already proven via くすみピンク /
+ *  くすみブルー) or "○○グレー" (ローズグレー turned up real product titles using exactly
+ *  that phrase) matters as much as the hex being close. Duplicate names across different
+ *  representative hexes are fine and intentional — nearestColorName just needs one entry
+ *  close enough in each saturation band, they don't need distinct names. */
 const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "オフホワイト", hex: "#F5F1E8" },
   { name: "生成り", hex: "#EDE4D3" },
@@ -46,10 +55,10 @@ const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "ラベンダー", hex: "#B497D6" },
   { name: "パープル", hex: "#9A72B8" },
   { name: "モーブ", hex: "#9C7B8B" },
-  { name: "グレイッシュラベンダー", hex: "#A79BB5" },
-  { name: "アッシュブルー", hex: "#9CACC0" },
+  { name: "くすみラベンダー", hex: "#A79BB5" },
+  { name: "くすみブルー", hex: "#9CACC0" },
   { name: "ローズグレー", hex: "#BFA8A5" },
-  { name: "セージグレー", hex: "#A8B0A0" },
+  { name: "くすみグリーン", hex: "#A8B0A0" },
   { name: "ライトグレー", hex: "#D6D6D6" },
   { name: "グレー", hex: "#8A8A8A" },
   { name: "チャコールグレー", hex: "#4A4A4A" },
