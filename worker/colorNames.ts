@@ -1,7 +1,17 @@
 /** A curated set of Japanese color names common in yarn/fashion shopping, each with a
  *  representative hex. A generated palette color (from 配色マッチング) is matched to
- *  whichever of these is nearest in RGB space, and that name — never the raw hex — is
- *  what gets used to build the Rakuten search keyword ("○○ 毛糸"). Not shown to the user. */
+ *  whichever of these is nearest (see nearestColorName below), and that name — never the
+ *  raw hex — is what gets used to build the Rakuten search keyword ("○○ 毛糸"). Not shown
+ *  to the user.
+ *
+ *  The "くすみ" (dusty/muted) entries below still sit at ~30-40% saturation — real muted
+ *  tones, just not desaturated ones. A palette color that's genuinely low-saturation
+ *  (roughly 8-20%) but still has a discernible hue has no close match at that saturation
+ *  level, so it loses on distance to a plain gray (which sits at 0% saturation and can be
+ *  closer in the saturation/hue plane than any of the more saturated named colors are) even
+ *  though a human would call it a muted/grayish version of that hue, not gray. The
+ *  "グレイッシュ/アッシュ/ローズ/セージグレー" entries fill that specific gap — don't
+ *  remove them without covering the same low-saturation band some other way. */
 const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "オフホワイト", hex: "#F5F1E8" },
   { name: "生成り", hex: "#EDE4D3" },
@@ -36,6 +46,10 @@ const NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "ラベンダー", hex: "#B497D6" },
   { name: "パープル", hex: "#9A72B8" },
   { name: "モーブ", hex: "#9C7B8B" },
+  { name: "グレイッシュラベンダー", hex: "#A79BB5" },
+  { name: "アッシュブルー", hex: "#9CACC0" },
+  { name: "ローズグレー", hex: "#BFA8A5" },
+  { name: "セージグレー", hex: "#A8B0A0" },
   { name: "ライトグレー", hex: "#D6D6D6" },
   { name: "グレー", hex: "#8A8A8A" },
   { name: "チャコールグレー", hex: "#4A4A4A" },

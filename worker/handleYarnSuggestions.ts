@@ -59,11 +59,11 @@ export async function handleYarnSuggestions(
   const results = await Promise.all(
     hexes.map(async (hex): Promise<ColorSuggestion> => {
       const colorName = nearestColorName(`#${hex}`);
-      // Versioned so a code/behavior change (like no longer caching failures, or the v3
-      // fix to nearestColorName's distance metric misclassifying pale purples as gray)
-      // can't keep getting masked by entries an older version of this code wrote under
-      // the same key.
-      const cacheKey = new Request(`https://yarn-suggestions.internal/v3/${encodeURIComponent(colorName)}`);
+      // Versioned so a code/behavior change (like no longer caching failures, the v3 fix
+      // to nearestColorName's distance metric, or the v4 addition of low-saturation named
+      // colors) can't keep getting masked by entries an older version of this code wrote
+      // under the same key.
+      const cacheKey = new Request(`https://yarn-suggestions.internal/v4/${encodeURIComponent(colorName)}`);
 
       const cached = await cache.match(cacheKey);
       if (cached) {
