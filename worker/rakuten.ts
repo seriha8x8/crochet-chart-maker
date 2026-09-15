@@ -61,6 +61,9 @@ export async function searchYarnByColorName(
   const url = new URL(SEARCH_ENDPOINT);
   url.searchParams.set("format", "json");
   url.searchParams.set("keyword", `${colorName} 毛糸`);
+  // The new openapi.rakuten.co.jp gateway wants this under "accessKey" — sending
+  // "applicationId" too in case it's still read as a fallback on this endpoint.
+  url.searchParams.set("accessKey", trimmedAppId);
   url.searchParams.set("applicationId", trimmedAppId);
   if (trimmedAffiliateId) url.searchParams.set("affiliateId", trimmedAffiliateId);
   url.searchParams.set("hits", "2");
