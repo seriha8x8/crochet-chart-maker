@@ -36,6 +36,14 @@ export type SearchResult = {
  *  palette color — see colorNames.ts). Returns the top 1-2 hits, or [] on no results or
  *  a Rakuten-side error (e.g. rate limit) — the caller falls back to a "not found" card
  *  rather than surfacing an API error to the visitor. */
+/** Never the raw secret — just enough to eyeball in a debug message whether the value
+ *  Cloudflare handed us actually looks like the one that was pasted in (right length,
+ *  right start/end), without echoing the whole thing back. */
+function maskedPreview(value: string): string {
+  if (value.length <= 8) return `len=${value.length}`;
+  return `len=${value.length} preview=${value.slice(0, 4)}…${value.slice(-4)}`;
+}
+
 export async function searchYarnByColorName(
   colorName: string,
   appId: string,
@@ -45,6 +53,7 @@ export async function searchYarnByColorName(
   // value into Cloudflare's dashboard is enough for Rakuten to reject it as invalid.
   const trimmedAppId = appId.trim();
   const trimmedAffiliateId = affiliateId.trim();
+  const credentialInfo = `[applicationId ${maskedPreview(trimmedAppId)}]`;
 
   const url = new URL(SEARCH_ENDPOINT);
   url.searchParams.set("format", "json");
@@ -58,20 +67,20 @@ export async function searchYarnByColorName(
   try {
     res = await fetch(url.toString());
   } catch (err) {
-    const debug = `fetch failed: ${String(err)}`;
+    const debug = `fetch failed: ${String(err)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
     return { products: [], debug };
   }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    const debug = `http ${res.status}: ${body.slice(0, 400)}`;
+    const debug = `http ${res.status}: ${body.slice(0, 400)} ${credentialInfo}`;
     console.error("[rakuten]", debug);
     return { products: [], debug };
   }
 
   const data = (await res.json()) as RakutenSearchResponse;
   if (data.error) {
-    const debug = `rakuten error: ${data.error} — ${data.error_description ?? ""}`;
+    const debug = `rakuten error: ${data.error} — ${data.error_description ?? ""} ${credentialInfo}`;
     console.error("[rakuten]", debug);
     return { products: [], debug };
   }

@@ -56,7 +56,9 @@ export async function handleYarnSuggestions(
   const results = await Promise.all(
     hexes.map(async (hex): Promise<ColorSuggestion> => {
       const colorName = nearestColorName(`#${hex}`);
-      const cacheKey = new Request(`https://yarn-suggestions.internal/${encodeURIComponent(colorName)}`);
+      // Versioned so a code/behavior change (like no longer caching failures) can't keep
+      // getting masked by entries an older version of this code wrote under the same key.
+      const cacheKey = new Request(`https://yarn-suggestions.internal/v2/${encodeURIComponent(colorName)}`);
 
       const cached = await cache.match(cacheKey);
       if (cached) {
