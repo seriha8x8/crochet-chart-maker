@@ -41,11 +41,16 @@ export async function searchYarnByColorName(
   appId: string,
   affiliateId: string,
 ): Promise<SearchResult> {
+  // Trim defensively — a stray leading/trailing space or newline from copy-pasting the
+  // value into Cloudflare's dashboard is enough for Rakuten to reject it as invalid.
+  const trimmedAppId = appId.trim();
+  const trimmedAffiliateId = affiliateId.trim();
+
   const url = new URL(SEARCH_ENDPOINT);
   url.searchParams.set("format", "json");
   url.searchParams.set("keyword", `${colorName} 毛糸`);
-  url.searchParams.set("applicationId", appId);
-  if (affiliateId) url.searchParams.set("affiliateId", affiliateId);
+  url.searchParams.set("applicationId", trimmedAppId);
+  if (trimmedAffiliateId) url.searchParams.set("affiliateId", trimmedAffiliateId);
   url.searchParams.set("hits", "2");
   url.searchParams.set("imageFlag", "1");
 
