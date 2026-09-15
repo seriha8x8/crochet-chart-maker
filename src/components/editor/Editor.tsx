@@ -11,6 +11,7 @@ import { Canvas } from "@/components/editor/Canvas";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { useKeyboardShortcuts } from "@/components/editor/useKeyboardShortcuts";
 import { useChartStore } from "@/store/chartStore";
+import { AdSlot, AD_SLOT_HORIZONTAL } from "@/components/AdSlot";
 
 export function Editor() {
   useKeyboardShortcuts();
@@ -38,8 +39,11 @@ export function Editor() {
         <main className="min-w-0 flex-1">
           <Canvas />
         </main>
-        <aside className="w-64 shrink-0 overflow-y-auto border-l border-peach/40 bg-white">
-          <PropertiesPanel />
+        <aside className="flex w-64 shrink-0 flex-col border-l border-peach/40 bg-white">
+          <div className="flex-1 overflow-y-auto">
+            <PropertiesPanel />
+          </div>
+          <AdSlot slot={AD_SLOT_HORIZONTAL} className="border-t border-peach/40 p-2" />
         </aside>
       </div>
       <SiteFooter compact />
