@@ -60,6 +60,8 @@ const CATEGORIES: VideoCategory[] = [
       { title: "ふわもこわんちゃんポーチの編み方 Part1", videoUrl: "https://youtu.be/-aYeob3cXyA" },
       { title: "ふわもこわんちゃんポーチの編み方 Part2（パーツ作成〜完成）", videoUrl: "https://youtu.be/ZErifJv8aRY" },
       { title: "鎖編みと細編みだけで簡単リボンの編み方", videoUrl: "https://youtu.be/luVNvUgITMU" },
+      { title: "【アフガン編み】チェックバッグの編み方 Part.1", videoUrl: "https://youtu.be/eSHkC2MMy2o" },
+      { title: "【アフガン編み】チェックバッグの編み方 Part.2", videoUrl: "https://youtu.be/pEcZTngEf-k" },
     ],
   },
 ];
