@@ -52,6 +52,16 @@ const CATEGORIES: VideoCategory[] = [
       { title: "ピコット編み", videoUrl: null },
     ],
   },
+  {
+    name: "おすすめの作品 How to",
+    thumbnailBg: "#F0E8FC",
+    items: [
+      { title: "ブランケットヤーンで編むもちもちブランケットの編み方", videoUrl: "https://youtu.be/E7vs1qMU3S0" },
+      { title: "ふわもこわんちゃんポーチの編み方 Part1", videoUrl: "https://youtu.be/-aYeob3cXyA" },
+      { title: "ふわもこわんちゃんポーチの編み方 Part2（パーツ作成〜完成）", videoUrl: "https://youtu.be/ZErifJv8aRY" },
+      { title: "鎖編みと細編みだけで簡単リボンの編み方", videoUrl: "https://youtu.be/luVNvUgITMU" },
+    ],
+  },
 ];
 
 export default function VideosPage() {
