@@ -20,8 +20,8 @@ const CATEGORIES: VideoCategory[] = [
     thumbnailBg: "#D8F0E8",
     items: [
       { title: "鎖編み", videoUrl: "https://youtu.be/xr9mzow3-pg" },
-      { title: "細編み", videoUrl: null },
-      { title: "中長編み", videoUrl: null },
+      { title: "細編み", videoUrl: "https://youtu.be/YUeY_AAU9_0" },
+      { title: "中長編み", videoUrl: "https://youtu.be/jyDgznWulA4" },
       { title: "長編み", videoUrl: null },
       { title: "長々編み", videoUrl: null },
       { title: "引き抜き編み", videoUrl: "https://youtu.be/4PpZeDC9HNY" },
